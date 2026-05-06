@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile - Satyam Gold</title>
+  <link rel="icon" href="https://base44.app/api/apps/68a375197577ce82d3f4980e/files/04925dbc9_100012467.png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="sg-header" id="sgHeader"></header>
+<section class="sg-section">
+  <div class="page-content" id="profileBox"><p>Loading...</p></div>
+</section>
+<footer class="sg-footer" id="sgFooter"></footer>
+<a class="sg-wa-float" id="sgWAFloat" href="#" target="_blank">💬</a>
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  async function renderProfile() {
+    const c = SG.getCustomer();
+    const box = document.getElementById('profileBox');
+    if (!c) {
+      box.innerHTML = '<h2>My Profile</h2><p>Please login to view profile</p><button class="sg-btn sg-btn-primary" style="max-width:200px" onclick="openLoginModal()">Login</button>';
+      return;
+    }
+    box.innerHTML = `
+      <h2>My Profile</h2>
+      <div class="sg-field"><label>Name</label><input id="pName" value="${c.name || ''}"></div>
+      <div class="sg-field"><label>Phone</label><input value="${c.phone}" readonly></div>
+      <div class="sg-field"><label>Email</label><input id="pEmail" value="${c.email || ''}"></div>
+      <div class="sg-field"><label>Default Address</label><textarea id="pAddr" rows="2">${c.default_address || ''}</textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="sg-field"><label>Pincode</label><input id="pPin" value="${c.default_pincode || ''}"></div>
+        <div class="sg-field"><label>Ward No.</label><input id="pWard" value="${c.default_ward || ''}"></div>
+      </div>
+      <div class="sg-field"><label>Alt Phone</label><input id="pAlt" value="${c.default_alt_phone || ''}"></div>
+      <button class="sg-btn sg-btn-primary" style="max-width:200px" id="pSave">Save Profile</button>
+      <button class="sg-btn sg-btn-outline" style="max-width:200px;margin-top:8px" id="pLogout">Logout</button>
+    `;
+    document.getElementById('pSave').onclick = async () => {
+      const upd = {
+        name: pName.value.trim(),
+        email: pEmail.value.trim(),
+        default_address: pAddr.value.trim(),
+        default_pincode: pPin.value.trim(),
+        default_ward: pWard.value.trim(),
+        default_alt_phone: pAlt.value.trim()
+      };
+      const { data, error } = await sb.from('customers').update(upd).eq('phone', c.phone).select().single();
+      if (error) { SG.toast(error.message, 'error'); return; }
+      SG.setCustomer(data);
+      SG.toast('Profile updated', 'success');
+    };
+    document.getElementById('pLogout').onclick = () => { SGAuth.logout(); location.href = '/'; };
+  }
+  document.addEventListener('DOMContentLoaded', renderProfile);
+  document.addEventListener('sg:auth-changed', renderProfile);
+</script>
+</body>
+</html>

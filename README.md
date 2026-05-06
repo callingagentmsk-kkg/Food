@@ -1,258 +1,214 @@
-# Satyam Gold E-commerce Website
+# 🌾 Satyam Gold - E-commerce Website (v2.0)
 
-## Project Overview
-- **Name**: Satyam Gold E-commerce Website  
-- **Goal**: Complete e-commerce solution for traditional Indian food products (Atta, Sattu, Besan)
-- **Features**: Product showcase, shopping cart, order management, SMS OTP authentication, admin panel
+**Pure & Tasty Premium Quality Food Products** — Complete e-commerce solution with **Supabase backend**, full admin panel, OTP login, order tracking, and policy pages.
 
-## URLs
-- **Development**: https://3000-ina2hnb47c8vgdxebtbqk-6532622b.e2b.dev
-- **Admin Panel**: https://3000-ina2hnb47c8vgdxebtbqk-6532622b.e2b.dev/admin/
-- **GitHub**: Repository configured with GitHub integration
+---
 
-## Data Architecture
-- **Data Models**: Products, Orders, Quick Orders, Site Settings, Admin Auth, Hero Images, User Authentication
-- **Storage Services**: 
-  - Cloudflare D1 (SQLite database for relational data)
-  - Local storage (User sessions and cart persistence)
-  - Phone.email API (SMS OTP authentication service)
-- **Data Flow**: Frontend → Phone.email API (authentication) → Cloudflare Functions API → D1 Database
+## 🚀 Live URLs
 
-## Authentication System
-- **Method**: Phone.email SMS OTP (Flipkart-style login)
-- **Credentials**: CLIENT ID: 12468569854913964682, API Key: pyYJ37IeK21p6wySS7IdaB0bXzsfcSde
-- **Flow**: Mobile Number Input → OTP Generation → OTP Verification → User Login
-- **Features**: Name collection, profile management, order history access
+- **Website**: Run locally with `npm run dev` → http://localhost:3000
+- **Admin Panel**: http://localhost:3000/admin/
+- **GitHub**: https://github.com/callingagentmsk-kkg/Food
 
-## Current Features Completed
-### Main Website:
-- ✅ Responsive homepage with hero slider
-- ✅ NEW: Product cards matching reference design (discount badge, loved by counter)
-- ✅ Product showcase with cart functionality  
-- ✅ Shopping cart with quantity management
-- ✅ Phone.email SMS OTP authentication (Real SMS OTP working)
-- ✅ NEW: Loved by feature with heart icon (login required)
-- ✅ User profile and order history display
-- ✅ Cart contents display in user menu
-- ✅ Checkout process with order placement
-- ✅ Contact form integration
-- ✅ WhatsApp bulk order integration with admin tracking
-- ✅ Mobile-responsive design (same as PC)
+## 🔑 Default Credentials
 
-### Admin Panel:
-- ✅ Secure admin login (avinashrajmsk@gmail.com / Satyam16) - **WORKING PERFECTLY**
-- ✅ Dashboard with order statistics and revenue tracking
-- ✅ Order management with **real-time status updates** (dropdown in order cards)
-- ✅ Quick Order message management and tracking
-- ✅ Product management (CRUD operations)
-  - ✅ Add/Edit/Delete products
-  - ✅ Loved by counter management in product edit form
-  - ✅ Original price field for **automatic discount calculation**
-  - ✅ Print Price & Selling Price fields with % OFF display
-- ✅ **NEW: Cart History Section** - View all user cart items grouped by user
-- ✅ **NEW: User Order Tracking** - View complete order history per user from cart section
-- ✅ Hero slider image management with delete functionality
-- ✅ Site settings (branding, contact info, colors)
-- ✅ Admin authentication system - **COMPLETELY FIXED**
+- **Admin Username**: `8252487551`
+- **Admin Password**: `8252487551`
+  *(Change from Admin → Change Password after first login)*
 
-### Backend API:
-- ✅ Products API (GET, POST, PUT, DELETE)
-- ✅ Orders API with status management
-- ✅ User orders API for order history
-- ✅ Quick orders API for bulk order tracking
-- ✅ Admin authentication API
-- ✅ Hero images API with delete functionality
-- ✅ Site settings API
-- ✅ Contact form API
-- ✅ Phone.email SMS OTP integration
+---
 
-## Tech Stack
-- **Frontend**: Vanilla HTML/CSS/JavaScript + TailwindCSS
-- **Authentication**: Phone.email SMS OTP API
-- **Backend**: Cloudflare Functions (Edge runtime)
-- **Database**: Cloudflare D1 (SQLite)
-- **Storage**: Local storage for user sessions
-- **Deployment**: Cloudflare Pages
-- **Development**: Wrangler CLI, PM2
+## 📋 SETUP — STEP 1: Run Supabase SQL
 
-## User Guide
-### For Customers:
-1. Click "Login" and enter your mobile number (10-digit Indian number)
-2. Enter the OTP received via SMS to login
-3. Browse products on the homepage
-4. Add products to cart with desired weight options
-5. View your cart contents from the user menu
-6. Proceed to checkout and place orders
-7. Track order history from your profile menu
-8. Use bulk order feature for WhatsApp integration
+1. Go to your Supabase project: https://ceicmmeeuphycsmvifak.supabase.co
+2. Open **SQL Editor** → **New query**
+3. Open the file `supabase/schema.sql` from this repo
+4. **Copy ALL the SQL content** and paste it into the SQL Editor
+5. Click **Run**
 
-### For Admin:
-1. Access admin panel at `/admin/`
-2. **Login Credentials**: avinashrajmsk@gmail.com / Satyam16
-3. View dashboard with order statistics
-4. Manage regular orders and quick order messages
-5. Update product catalog and hero images
-6. Configure site settings and contact information
-7. Monitor bulk order requests from customers
+This creates 10 tables, RLS policies, default admin user, sample products, hero slide, and all 7 policy pages.
 
-## Development Setup
-```bash
-# Install dependencies
-npm install
+## 📋 SETUP — STEP 2: Anon Key (already configured)
 
-# Apply database migrations
-npx wrangler d1 migrations apply satyam-gold-production --local
+The anon key is already wired in `public/js/config.js`:
 
-# Seed database with default data
-npm run db:seed
-
-# Start development server with PM2
-pm2 start ecosystem.config.cjs
-
-# Test the application
-curl http://localhost:3000
+```js
+window.SUPABASE_CONFIG = {
+  url: 'https://ceicmmeeuphycsmvifak.supabase.co',
+  anonKey: 'eyJhbGciOiJI...IuhKlKffLXP--l8sSONXmrg3KA0uzKexMj_bRRsbm2E'
+};
 ```
 
-## Admin Panel Access
-- **URL**: https://3000-ina2hnb47c8vgdxebtbqk-6532622b.e2b.dev/admin/
-- **Login**: avinashrajmsk@gmail.com / Satyam16
-- **Features**:
-  - Dashboard with order statistics
-  - Order management with status tracking
-  - Quick order message management
-  - Product management (add/edit/delete)
-  - Hero image management with delete
-  - Site branding and customization
-  - Secure authentication system
+If you need to switch projects later, just edit those two values.
 
-## Database Schema (Cloudflare D1)
-- **products**: Product catalog with pricing, images, original_price for discounts, loved_by counter
-- **orders**: Customer orders with items (JSON), status, phone tracking
-- **cart_items**: User cart persistence (user_id, product_id, quantity, weight, timestamps)
-- **cart_history**: Historical cart data for analytics
-- **users**: User profiles with phone, name, email, address, pincode
-- **quick_orders**: Bulk order messages from WhatsApp with admin notes
-- **site_settings**: Configurable site settings (logo, colors, contact info)
-- **admin_auth**: Admin authentication tokens
-- **hero_images**: Homepage slider images with CRUD operations
+## 📋 SETUP — STEP 3: Run Locally
 
-## API Endpoints
-### Products
-- `GET /api/products` - Get all products with pagination
-- `POST /api/products` - Add new product
-- `PUT /api/products?id={id}` - Update product (includes original_price, loved_by)
-- `DELETE /api/products?id={id}` - Delete product
+```bash
+npm install
+npm run dev
+```
 
-### Orders
-- `GET /api/orders?limit=20&offset=0` - Get all orders (admin)
-- `GET /api/orders?phone={phone}` - Get orders by customer phone
-- `POST /api/orders` - Create new order
-- `PUT /api/orders` - **NEW: Update order status** (body: {order_id, status})
+Open http://localhost:3000
 
-### Cart
-- `GET /api/cart` - Get all cart items grouped by user
-- `POST /api/cart` - Add item to cart (requires user authentication)
-- `GET /api/cart?user_id={user_id}` - Get cart items for specific user
+---
 
-### Authentication
-- `POST /api/admin/auth` - Admin login
-- `GET /api/admin/auth` - Verify admin token
-- Phone.email SMS OTP for customer authentication
+## ✨ Features Implemented
 
-### Quick Orders
-- `GET /api/quick-orders` - Get all quick orders
-- `POST /api/quick-orders` - Save bulk order message
-- `PUT /api/quick-orders` - Update order status/notes
+### 🛍️ Customer Website
+- ✅ **Responsive product grid** — 2 columns on mobile, auto-fit on desktop (matches reference image)
+- ✅ **Auto discount %** badge — calculates from MRP & Selling Price (e.g. "7% OFF")
+- ✅ **Loved by counter** — shows as `1k`, `2k`, `1.5k` (real number stored in DB; formatted display)
+- ✅ **Heart toggle** — login required, real DB tracking via `product_loves` table
+- ✅ **Bulk Order WhatsApp** — works for in-stock AND out-of-stock products
+- ✅ **Out of Stock** state with disabled button
+- ✅ **Phone OTP login** with welcome popup, logo, "Welcome to Satyam Gold"
+  - First-time users → Name registration step
+  - Returning users → Auto-login with saved data + order history
+- ✅ **Real Add-to-Cart drawer** with qty +/-, remove, total
+- ✅ **Real e-commerce Checkout** — Name, Phone, Alt Phone, Address, Pincode, Ward No.
+  - Saves customer's default address → next time auto-filled
+  - "Use saved address" checkbox
+  - COD active; Cashfree placeholder ready
+- ✅ **Order Tracking page** with animated step-by-step tracker
+  - Pending → Accepted → Packed → Shipped → Out for Delivery → Delivered
+  - Track by order number, OR view all orders after login
+- ✅ **Profile page** — Edit name, email, default address
+- ✅ **Hero slider** — auto-rotating, dots navigation
+- ✅ **WhatsApp floating button**
+- ✅ **Contact form** with DB storage
+- ✅ **Footer** with all policy links and social icons
 
-### Settings & Media
-- `GET /api/settings` - Get site settings
-- `PUT /api/settings` - Update site settings
-- `GET /api/hero-images` - Get hero slider images
-- `POST /api/hero-images` - Add hero slider image
-- `DELETE /api/hero-images/{id}` - Delete hero image
+### 🛡️ Admin Panel
+- ✅ **Dashboard** with KPIs (Total Orders, Pending, Revenue, Customers) + Recent Orders
+- ✅ **Orders Management**
+  - Filter by status, search by phone/order #
+  - View full order details
+  - **Update status** (Pending / Accepted / Rejected / Packed / Shipped / Out for Delivery / Delivered / Cancelled)
+  - Add admin notes
+- ✅ **Products CRUD**
+  - **MRP (Print Price) + Selling Price fields** → discount % auto-calculated
+  - **Loved by base count** field (1500 → "1.5k" displayed)
+  - In-stock toggle, sort order, image URL
+- ✅ **Customers** list with order count + total spent
+- ✅ **Hero Slides** CRUD (image, title, subtitle, button text/link, sort, active)
+- ✅ **Policy Pages editor** (HTML editor for all 7 legal pages)
+- ✅ **Site Settings**
+  - Branding: Logo, site name, hero tagline, footer text
+  - Contact: Phone, WhatsApp, Email, Address, Legal Entity Name
+  - Social links: Facebook, Instagram, YouTube, WhatsApp Chat URL
+  - **Cashfree gateway** keys (App ID, Secret, Mode TEST/PROD)
+- ✅ **Contact Messages** inbox
+- ✅ **Change Username/Password**
 
-## Authentication Integration
-### Phone.email SMS OTP
-- **Service**: Phone.email API
-- **Client ID**: 12468569854913964682
-- **API Key**: pyYJ37IeK21p6wySS7IdaB0bXzsfcSde
-- **Features**: 
-  - Mobile number validation (Indian numbers)
-  - SMS OTP delivery
-  - Session management with localStorage
-  - User profile collection and management
+### 📄 Legal & Policy Pages (all linked, all editable from admin)
+- `/pages/privacy.html` — Privacy Policy
+- `/pages/terms.html` — Terms & Conditions
+- `/pages/return.html` — Return Policy
+- `/pages/refund.html` — Refund and Cancellation Policy
+- `/pages/shipping.html` — Shipping Policy
+- `/pages/about.html` — About Us *(includes Legal Entity Name: Satyam Gold is a brand owned and operated by Satyam Food Product)*
+- `/pages/contact.html` — Contact Us *(8252487551, Vidhyadhar, Khagaria 851204)*
 
-## Features Not Yet Implemented
-1. **Payment Gateway**: Razorpay/PayU integration
-2. **Email Notifications**: Order confirmations and status updates
-3. **Advanced Analytics**: Order analytics and reporting
-4. **Image Upload**: R2 storage integration for direct image uploads
-5. **Inventory Management**: Stock tracking and alerts
-6. **SEO Optimization**: Meta tags and structured data
-7. **Real-time Updates**: WebSocket for live order updates
+These are **WhatsApp / Meta compliant** — all required pages with editable HTML content.
 
-## Recommended Next Steps
-1. **Deploy to Cloudflare Pages**: Setup production environment
-2. **Configure Phone.email Production**: Verify API limits and usage
-3. **Add Payment Gateway**: Integrate Razorpay for payments
-4. **Implement Email Service**: Add order notifications
-5. **Setup Custom Domain**: Configure domain and SSL
-6. **Add Analytics**: Google Analytics integration
-7. **Real-time Features**: WebSocket for live updates
+---
 
-## Deployment Status
-- **Platform**: Ready for Cloudflare Pages deployment
-- **Status**: ✅ Development active at https://3000-ina2hnb47c8vgdxebtbqk-6532622b.e2b.dev
-- **Database**: Local D1 setup complete with migrations applied
-- **Authentication**: Phone.email SMS OTP fully integrated and working
-- **Admin Panel**: Secure login system implemented and fixed
-- **Last Updated**: 2025-12-07
+## 🗂️ Database Schema (Supabase)
 
-## Admin Credentials
-- **Email**: avinashrajmsk@gmail.com
-- **Password**: Satyam16
-- **Access**: Full admin panel management
+| Table | Purpose |
+|-------|---------|
+| `site_settings` | Logo, colors, contact info, social links, Cashfree keys |
+| `admin_users` | Admin login credentials |
+| `products` | Catalog with MRP, price, stock, loved_by counters |
+| `customers` | User profiles (phone, name, default address) |
+| `product_loves` | Tracks which user loved which product |
+| `orders` | All orders with items JSONB, status, payment |
+| `hero_slides` | Homepage slider |
+| `otp_codes` | Temporary OTP storage for login |
+| `contact_messages` | Contact form submissions |
+| `policy_pages` | Privacy/Terms/Returns/etc HTML content |
 
-## Support
-For any issues or questions:
-- Check the browser console for errors
-- Verify database connectivity with `pm2 logs`
-- Ensure Phone.email API is working correctly
-- Test admin authentication before production
-- Contact: avinash@gmail.com | 9631816666
+All tables have **RLS enabled** with policies allowing the anon key to read/write (since this is a single-tenant admin-managed system).
 
-## Recent Updates (2025-12-17) - COMPLETE ADMIN PANEL OVERHAUL
-- ✅ **MAJOR ADMIN PANEL ENHANCEMENTS**
-  - ✅ Fixed admin panel login button responsiveness and authentication
-  - ✅ Added **Cart History** section to view all user cart items grouped by user
-  - ✅ Added **Order Status Update** functionality with dropdown in orders list
-  - ✅ Integrated real-time order status updates in admin panel
-  - ✅ Added user order history viewing from cart section
-  - ✅ Created PUT endpoint for orders API to update order status
-  - ✅ Fixed order status update API endpoint in api.js
-  
-- ✅ **PRODUCT MANAGEMENT IMPROVEMENTS**
-  - ✅ Print Price (original_price) field integrated in database schema
-  - ✅ Selling Price (price) fields working with auto percentage calculation
-  - ✅ Discount badge displayed automatically on products with original price
-  - ✅ Bulk Order button now shows for **out-of-stock** products
-  
-- ✅ **CART & ORDER TRACKING**
-  - ✅ Add to Cart and Buy Now buttons **fully functional**
-  - ✅ Cart items saved to Cloudflare D1 database automatically
-  - ✅ Order history tracked per user by phone number
-  - ✅ Cart history visible in admin panel with user grouping
-  - ✅ Real-time cart data synchronization between frontend and database
-  
-- ✅ **DATABASE INTEGRATION**
-  - ✅ All data persisting to Cloudflare D1 properly
-  - ✅ Orders, cart items, users, products fully integrated
-  - ✅ Real-time updates working across admin panel
-  - ✅ Cart items table with user_id, product details, and timestamps
-  
-- ✅ **PREVIOUS UPDATES (2025-12-08) - Phone.email Authentication**
-  - ✅ IMPLEMENTED REAL Phone.email SMS OTP Authentication
-  - ✅ CLIENT ID: 12468569854913964682
-  - ✅ Production-ready SMS OTP functionality
-  - ✅ Complete user session management
-  - ✅ NO DEMO MODE - Only real authentication
+---
+
+## 💳 Payment Gateway
+
+- ✅ **COD (Cash on Delivery)** — Fully working
+- 🔧 **Cashfree** — Keys can be saved in admin panel. Live activation requires a Supabase Edge Function (recommended for security — secret key must not be exposed in frontend). Skeleton ready in admin → Settings → Payment Gateway.
+
+To activate Cashfree live: deploy a Supabase Edge Function that creates payment orders using your secret key, and update the checkout flow to call it.
+
+---
+
+## 🔐 OTP Login Note
+
+Currently OTP is generated in-browser and stored in Supabase (visible in console + toast for testing). To make it real SMS:
+1. Create a Supabase Edge Function that calls MSG91 / Cashfree SMS / Twilio
+2. Replace the `sendOTP` function in `public/js/auth.js` to call your Edge Function instead
+
+The verification flow already uses real Supabase storage and works end-to-end.
+
+---
+
+## 🎨 Mobile Responsive
+
+The product grid shows **2 columns on mobile** (matching your reference image) and auto-fits on desktop. Tested down to 380px viewport width.
+
+---
+
+## 📞 Contact (Site)
+
+- **Phone**: 8252487551
+- **Address**: Vidhyadhar, Khagaria 851204
+- **Email**: satyamgold@gmail.com (editable in admin)
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Vanilla HTML / CSS / JavaScript (no framework needed — fast & lightweight)
+- **Backend**: Supabase (PostgreSQL + Auth + RLS + REST API via supabase-js)
+- **Hosting**: Any static host (Netlify, Vercel, Cloudflare Pages, GitHub Pages)
+- **Auth**: Custom Phone OTP via Supabase tables
+
+---
+
+## 📦 Deployment
+
+This is a **pure static site**, deploy `public/` folder to any host:
+
+```bash
+# Cloudflare Pages
+npx wrangler pages deploy public
+
+# Netlify
+netlify deploy --prod --dir=public
+
+# Vercel
+vercel --prod public
+
+# GitHub Pages
+# Just push and enable Pages on /public folder
+```
+
+---
+
+## 📝 Changelog v2.0 (Major Rewrite)
+
+- 🔥 **Migrated from Cloudflare D1 → Supabase** (as requested)
+- 🔥 **Removed all Cloudflare Functions / Wrangler dependencies**
+- 🆕 Built complete admin panel with all CRUD operations
+- 🆕 Real OTP login flow with name registration + login history
+- 🆕 Real e-commerce checkout with saved addresses
+- 🆕 Order tracking with animated status flow
+- 🆕 7 policy pages — all editable from admin
+- 🆕 Auto discount % calculation
+- 🆕 Loved-by counter with 1k/2k formatting
+- 🆕 Mobile responsive product grid (matches reference design)
+- 🆕 Cashfree gateway placeholder + COD working
+- 🆕 Logo, branding, footer all editable from admin
+
+---
+
+© 2026 Satyam Gold — Brand owned and operated by Satyam Food Product.

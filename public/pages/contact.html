@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us - Satyam Gold</title>
+  <link rel="icon" href="https://base44.app/api/apps/68a375197577ce82d3f4980e/files/04925dbc9_100012467.png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="sg-header" id="sgHeader"></header>
+
+<section class="sg-section">
+  <div class="page-content" id="contentBox"></div>
+
+  <div class="page-content" style="margin-top:16px">
+    <h3>Send us a message</h3>
+    <div class="sg-field"><label>Your Name</label><input id="cName"></div>
+    <div class="sg-field"><label>Phone</label><input id="cPhone" maxlength="10"></div>
+    <div class="sg-field"><label>Email</label><input id="cEmail" type="email"></div>
+    <div class="sg-field"><label>Message</label><textarea id="cMsg" rows="4"></textarea></div>
+    <button class="sg-btn sg-btn-primary" id="cSend" style="max-width:220px">Send Message</button>
+  </div>
+</section>
+
+<footer class="sg-footer" id="sgFooter"></footer>
+<a class="sg-wa-float" id="sgWAFloat" href="#" target="_blank">💬</a>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { data } = await sb.from('policy_pages').select('*').eq('page_key', 'contact').maybeSingle();
+    document.getElementById('contentBox').innerHTML = data?.content || '<h2>Contact Us</h2><p>Phone: 8252487551</p>';
+
+    document.getElementById('cSend').onclick = async () => {
+      const name = cName.value.trim(), phone = cPhone.value.trim(), email = cEmail.value.trim(), message = cMsg.value.trim();
+      if (!name || !phone || !message) { SG.toast('Fill name, phone and message', 'error'); return; }
+      const btn = document.getElementById('cSend');
+      btn.disabled = true; btn.innerHTML = '<span class="sg-loader"></span>';
+      const { error } = await sb.from('contact_messages').insert({ name, phone, email, message });
+      btn.disabled = false; btn.textContent = 'Send Message';
+      if (error) { SG.toast(error.message, 'error'); return; }
+      SG.toast('Thank you! We will contact you soon.', 'success');
+      cName.value = cPhone.value = cEmail.value = cMsg.value = '';
+    };
+  });
+</script>
+</body>
+</html>

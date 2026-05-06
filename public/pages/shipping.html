@@ -3,30 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Satyam Gold - Pure & Tasty Premium Quality Food Products</title>
-  <meta name="description" content="Buy premium quality Atta, Sattu, Besan and traditional Indian food products. Pure, healthy and authentic. Free from preservatives.">
+  <title>Shipping Policy - Satyam Gold</title>
   <link rel="icon" href="https://base44.app/api/apps/68a375197577ce82d3f4980e/files/04925dbc9_100012467.png">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
 <header class="sg-header" id="sgHeader"></header>
-
-<section class="sg-hero" id="sgHero"></section>
-
-<section class="sg-section" id="products">
-  <h2>Our Products</h2>
-  <div class="sg-products" id="sgProducts"></div>
-</section>
-
+<section class="sg-section"><div class="page-content" id="content"><p>Loading...</p></div></section>
 <footer class="sg-footer" id="sgFooter"></footer>
-
-<a class="sg-wa-float" id="sgWAFloat" href="#" target="_blank" aria-label="WhatsApp">💬</a>
-
+<a class="sg-wa-float" id="sgWAFloat" href="#" target="_blank">💬</a>
 <script src="/js/config.js"></script>
 <script src="/js/auth.js"></script>
 <script src="/js/main.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { data } = await sb.from('policy_pages').select('*').eq('page_key', 'shipping').maybeSingle();
+    document.getElementById('content').innerHTML = data?.content || '<h2>Shipping Policy</h2><p>Coming soon.</p>';
+  });
+</script>
 </body>
 </html>

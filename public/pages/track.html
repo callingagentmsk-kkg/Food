@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order - Satyam Gold</title>
+  <link rel="icon" href="https://base44.app/api/apps/68a375197577ce82d3f4980e/files/04925dbc9_100012467.png">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<header class="sg-header" id="sgHeader"></header>
+
+<section class="sg-section">
+  <h2>Track Your Order</h2>
+
+  <div class="page-content" style="margin-top:0">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="orderInput" class="sg-field" style="flex:1;min-width:220px;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px" placeholder="Enter Order Number (e.g. SG-1234567890)">
+      <button class="sg-btn sg-btn-primary" style="max-width:160px" id="trackBtn">Track</button>
+    </div>
+    <p style="font-size:12px;color:#6b7280;margin-top:6px">or login to view all your orders below</p>
+  </div>
+
+  <div id="trackerWrap"></div>
+
+  <div class="page-content" id="ordersList" style="margin-top:16px">
+    <h3>My Orders</h3>
+    <div id="ordersBody"><p style="color:#6b7280">Login to see your order history</p></div>
+  </div>
+</section>
+
+<footer class="sg-footer" id="sgFooter"></footer>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/main.js"></script>
+<script>
+  const STATUS_FLOW = ['Pending', 'Accepted', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
+
+  function renderTracker(order) {
+    const wrap = document.getElementById('trackerWrap');
+    if (!order) { wrap.innerHTML = '<div class="page-content"><p style="color:#dc2626">Order not found</p></div>'; return; }
+    const status = order.status || 'Pending';
+    const isRejected = status === 'Rejected' || status === 'Cancelled';
+    const currentIdx = STATUS_FLOW.indexOf(status);
+
+    wrap.innerHTML = `
+      <div class="page-content">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+          <b>Order: ${order.order_number}</b>
+          <span style="color:#6b7280">${new Date(order.created_at).toLocaleString()}</span>
+        </div>
+        <p style="margin-bottom:6px">Total: <b>${SG.money(order.total)}</b> · Payment: ${order.payment_method}</p>
+        ${isRejected ? `
+          <div style="background:#fee2e2;color:#991b1b;padding:14px;border-radius:8px;text-align:center;font-weight:600">
+            ❌ Order ${status}
+            ${order.notes ? `<div style="font-weight:400;font-size:13px;margin-top:6px">${SG.escape ? SG.escape(order.notes) : order.notes}</div>` : ''}
+          </div>
+        ` : `
+          <div class="tracker">
+            ${STATUS_FLOW.map((s, i) => {
+              const cls = i < currentIdx ? 'done' : (i === currentIdx ? 'current' : '');
+              const ico = i < currentIdx ? '✓' : (i === currentIdx ? '●' : (i + 1));
+              return `<div class="step ${cls}"><div class="dot">${ico}</div><div class="label">${s}</div></div>`;
+            }).join('')}
+          </div>
+        `}
+        <h4 style="margin-top:12px">Items</h4>
+        <ul style="font-size:14px;padding-left:18px">
+          ${(order.items || []).map(i => `<li>${i.name} (${i.weight || ''}) × ${i.qty} — ${SG.money(i.price * i.qty)}</li>`).join('')}
+        </ul>
+        <p style="font-size:13px;color:#6b7280;margin-top:8px">📍 ${order.address || ''}, ${order.pincode || ''}</p>
+      </div>
+    `;
+  }
+
+  async function trackByNumber(num) {
+    if (!num) return;
+    const { data } = await sb.from('orders').select('*').eq('order_number', num).maybeSingle();
+    renderTracker(data);
+  }
+
+  async function loadMyOrders() {
+    const c = SG.getCustomer();
+    const body = document.getElementById('ordersBody');
+    if (!c) { body.innerHTML = '<p style="color:#6b7280">Login to see your order history</p><button class="sg-btn sg-btn-primary" style="max-width:200px;margin-top:10px" onclick="openLoginModal()">Login</button>'; return; }
+    body.innerHTML = '<p>Loading...</p>';
+    const { data } = await sb.from('orders').select('*').eq('customer_phone', c.phone).order('created_at', { ascending: false });
+    if (!data || data.length === 0) { body.innerHTML = '<p style="color:#6b7280">No orders yet</p>'; return; }
+    body.innerHTML = data.map(o => `
+      <div style="border:1px solid #e5e7eb;padding:12px;border-radius:10px;margin-bottom:10px;cursor:pointer" onclick="trackByNumber('${o.order_number}');window.scrollTo({top:0,behavior:'smooth'})">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          <b>${o.order_number}</b>
+          <span style="background:${statusColor(o.status)};color:#fff;padding:2px 10px;border-radius:999px;font-size:12px">${o.status}</span>
+        </div>
+        <div style="font-size:13px;color:#6b7280;margin-top:4px">${new Date(o.created_at).toLocaleString()} · ${SG.money(o.total)} · ${o.payment_method}</div>
+        <div style="font-size:13px;margin-top:4px">${(o.items || []).map(i => i.name).join(', ')}</div>
+      </div>
+    `).join('');
+  }
+
+  function statusColor(s) {
+    const map = { 'Pending':'#f59e0b','Accepted':'#3b82f6','Packed':'#8b5cf6','Shipped':'#0891b2','Out for Delivery':'#f97316','Delivered':'#16a34a','Rejected':'#dc2626','Cancelled':'#6b7280' };
+    return map[s] || '#6b7280';
+  }
+
+  document.getElementById('trackBtn').onclick = () => trackByNumber(document.getElementById('orderInput').value.trim());
+  document.getElementById('orderInput').addEventListener('keypress', e => { if (e.key === 'Enter') document.getElementById('trackBtn').click(); });
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const url = new URL(location.href);
+    const o = url.searchParams.get('o');
+    if (o) { document.getElementById('orderInput').value = o; trackByNumber(o); }
+    loadMyOrders();
+  });
+  document.addEventListener('sg:auth-changed', loadMyOrders);
+</script>
+</body>
+</html>

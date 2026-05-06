@@ -1,775 +1,567 @@
-// Main JavaScript for Satyam Gold website
+// ============================================================
+// SATYAM GOLD - Main Frontend Logic
+// ============================================================
 
-class SatyamGoldApp {
-    constructor() {
-        this.currentSlide = 0;
-        this.slides = [];
-        this.products = [];
-        this.siteSettings = {};
-        this.productsLoaded = 0;
-        this.productsLimit = 8;
-        
-        this.init();
-    }
+let _allProducts = [];
+let _myLoves = new Set(); // product IDs the current customer has loved
 
-    async init() {
-        try {
-            // Load site settings first
-            await this.loadSiteSettings();
-            
-            // Initialize components
-            this.bindEvents();
-            await this.loadHeroSlider();
-            await this.loadProducts();
-            
-            // Update UI with settings
-            this.applySiteSettings();
-            
-        } catch (error) {
-            console.error('App initialization error:', error);
-            utils.showToast('Failed to load website data', 'error');
+// ----- Header / Footer Renderers -----
+async function renderHeader() {
+  const settings = await getCachedSettings();
+  const customer = SG.getCustomer();
+  const cartCount = SG.cartCount();
+
+  const header = document.getElementById('sgHeader');
+  if (!header) return;
+
+  header.innerHTML = `
+    <div class="sg-header-inner">
+      <a href="/" class="sg-logo">
+        ${settings.site_logo ? `<img src="${settings.site_logo}" alt="${settings.site_name || 'Satyam Gold'}">` : ''}
+        <span class="name">${settings.site_name || 'Satyam Gold'}</span>
+      </a>
+      <nav class="sg-nav">
+        <a href="/">Home</a>
+        <a href="/#products">Products</a>
+        <a href="/pages/track.html">Track Order</a>
+        <a href="/pages/contact.html">Contact</a>
+        <a href="/pages/about.html">About</a>
+        <button class="icon-btn keep" id="cartBtn" title="Cart">
+          🛒
+          ${cartCount > 0 ? `<span class="badge">${cartCount}</span>` : ''}
+        </button>
+        ${customer
+          ? `<button class="keep" id="profileBtn" title="${customer.name}">👤 ${(customer.name || 'You').split(' ')[0]}</button>`
+          : `<button class="keep" id="loginBtn">Login</button>`
         }
-    }
+      </nav>
+    </div>
+  `;
 
-    // Load site settings
-    async loadSiteSettings() {
-        try {
-            const response = await api.getSiteSettings();
-            if (response.success) {
-                this.siteSettings = response.settings;
-            }
-        } catch (error) {
-            console.error('Failed to load site settings:', error);
-            // Use default settings
-            this.siteSettings = {
-                site_name: 'SATYAM GOLD',
-                site_logo: 'https://base44.app/api/apps/68a375197577ce82d3f4980e/files/04925dbc9_100012467.png',
-                primary_color: '#F97316',
-                secondary_color: '#FED7AA',
-                footer_text: '© 2024 SATYAM GOLD. All rights reserved. Delivering freshness to your doorstep.',
-                phone_number: '9631816666',
-                whatsapp_number: '6201530654',
-                email_address: 'avinash@gmail.com',
-                whatsapp_chat_url: 'https://wa.me/916201530654'
-            };
-        }
-    }
-
-    // Apply site settings to UI
-    applySiteSettings() {
-        const settings = this.siteSettings;
-        
-        // Update site name and logo
-        const siteName = document.getElementById('site-name');
-        const siteLogo = document.getElementById('site-logo');
-        const footerLogo = document.getElementById('footer-logo');
-        
-        if (siteName && settings.site_name) {
-            siteName.textContent = settings.site_name;
-            document.title = settings.site_name + ' - Premium Quality Products';
-        }
-        
-        if (siteLogo && settings.site_logo) {
-            siteLogo.src = settings.site_logo;
-        }
-        
-        if (footerLogo && settings.site_logo) {
-            footerLogo.src = settings.site_logo;
-        }
-
-        // Update contact information
-        this.updateContactInfo(settings);
-        
-        // Update footer text
-        const footerText = document.getElementById('footer-text');
-        if (footerText && settings.footer_text) {
-            footerText.textContent = settings.footer_text;
-        }
-
-        // Update colors (if custom colors are set)
-        if (settings.primary_color) {
-            document.documentElement.style.setProperty('--primary-color', settings.primary_color);
-        }
-        
-        if (settings.secondary_color) {
-            document.documentElement.style.setProperty('--secondary-color', settings.secondary_color);
-        }
-    }
-
-    // Update contact information
-    updateContactInfo(settings) {
-        const phoneElement = document.getElementById('contact-phone');
-        const whatsappElement = document.getElementById('contact-whatsapp');
-        const emailElement = document.getElementById('contact-email');
-        
-        if (phoneElement && settings.phone_number) {
-            phoneElement.textContent = settings.phone_number;
-        }
-        
-        if (whatsappElement && settings.whatsapp_number) {
-            whatsappElement.textContent = settings.whatsapp_number;
-        }
-        
-        if (emailElement && settings.email_address) {
-            emailElement.textContent = settings.email_address;
-        }
-
-        // Update social media links
-        const whatsappLink = document.getElementById('whatsapp-link');
-        const facebookLink = document.getElementById('facebook-link');
-        const instagramLink = document.getElementById('instagram-link');
-        
-        if (whatsappLink && settings.whatsapp_chat_url) {
-            whatsappLink.href = settings.whatsapp_chat_url;
-        }
-        
-        if (facebookLink && settings.facebook_url) {
-            facebookLink.href = settings.facebook_url;
-            facebookLink.style.display = settings.facebook_url ? 'flex' : 'none';
-        }
-        
-        if (instagramLink && settings.instagram_url) {
-            instagramLink.href = settings.instagram_url;
-            instagramLink.style.display = settings.instagram_url ? 'flex' : 'none';
-        }
-    }
-
-    // Bind event listeners
-    bindEvents() {
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
-
-        // Navigation smooth scrolling
-        document.querySelectorAll('nav a[href^="#"]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const targetId = link.getAttribute('href').substring(1);
-                utils.scrollToSection(targetId);
-                
-                // Close mobile menu if open
-                if (mobileMenu) {
-                    mobileMenu.classList.add('hidden');
-                }
-            });
-        });
-
-        // Quick order form
-        const quickOrderForm = document.getElementById('quick-order-form');
-        if (quickOrderForm) {
-            quickOrderForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                this.handleQuickOrder(new FormData(quickOrderForm));
-            });
-        }
-
-        // Load more products
-        const loadMoreBtn = document.getElementById('load-more-products');
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', () => {
-                this.loadMoreProducts();
-            });
-        }
-
-        // Scroll effects
-        window.addEventListener('scroll', this.handleScroll.bind(this));
-    }
-
-    // Load hero slider
-    async loadHeroSlider() {
-        try {
-            const response = await api.getHeroImages();
-            if (response.success && response.images.length > 0) {
-                this.slides = response.images;
-            } else {
-                // Default hero slide
-                this.slides = [
-                    {
-                        id: 1,
-                        image_url: 'https://base44.app/api/apps/68a375197577ce82d3f4980e/files/6336e6cce_100016130.png',
-                        title: 'GOLD HARVEST WHEAT FLOUR',
-                        subtitle: 'Grown Without Chemicals. Packed With Goodness',
-                        button_text: 'Shop Now',
-                        button_link: '#products'
-                    }
-                ];
-            }
-            
-            this.renderHeroSlider();
-            this.startSliderAutoplay();
-            
-        } catch (error) {
-            console.error('Failed to load hero slider:', error);
-            this.slides = []; // Empty slides on error
-        }
-    }
-
-    // Render hero slider
-    renderHeroSlider() {
-        const sliderContainer = document.getElementById('slider-container');
-        const dotsContainer = document.getElementById('slider-dots');
-        
-        if (!sliderContainer || this.slides.length === 0) return;
-
-        // Render slides
-        sliderContainer.innerHTML = this.slides.map(slide => `
-            <div class="hero-slide" style="background-image: linear-gradient(rgba(249, 115, 22, 0.1), rgba(234, 88, 12, 0.1)), url('${slide.image_url}')">
-                <div class="hero-content">
-                    <div class="max-w-3xl">
-                        <h2 class="hero-title">${slide.title || ''}</h2>
-                        <p class="hero-subtitle">${slide.subtitle || ''}</p>
-                        ${slide.button_text ? `
-                            <a href="${slide.button_link || '#products'}" class="hero-cta" onclick="utils.scrollToSection('products'); return false;">
-                                ${slide.button_text}
-                            </a>
-                        ` : ''}
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        // Render dots (if more than one slide)
-        if (this.slides.length > 1 && dotsContainer) {
-            dotsContainer.innerHTML = this.slides.map((_, index) => `
-                <button class="slider-dot ${index === 0 ? 'active' : ''}" onclick="app.goToSlide(${index})"></button>
-            `).join('');
-        }
-
-        // Bind navigation
-        this.bindSliderNavigation();
-    }
-
-    // Bind slider navigation
-    bindSliderNavigation() {
-        const prevBtn = document.getElementById('prev-slide');
-        const nextBtn = document.getElementById('next-slide');
-        
-        if (prevBtn) {
-            prevBtn.addEventListener('click', () => this.previousSlide());
-        }
-        
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => this.nextSlide());
-        }
-
-        // Hide navigation if only one slide
-        if (this.slides.length <= 1) {
-            if (prevBtn) prevBtn.style.display = 'none';
-            if (nextBtn) nextBtn.style.display = 'none';
-        }
-    }
-
-    // Slider navigation methods
-    nextSlide() {
-        this.currentSlide = (this.currentSlide + 1) % this.slides.length;
-        this.updateSlider();
-    }
-
-    previousSlide() {
-        this.currentSlide = this.currentSlide === 0 ? this.slides.length - 1 : this.currentSlide - 1;
-        this.updateSlider();
-    }
-
-    goToSlide(index) {
-        this.currentSlide = index;
-        this.updateSlider();
-    }
-
-    updateSlider() {
-        const container = document.getElementById('slider-container');
-        const dots = document.querySelectorAll('.slider-dot');
-        
-        if (container) {
-            container.style.transform = `translateX(-${this.currentSlide * 100}%)`;
-        }
-        
-        // Update dots
-        dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === this.currentSlide);
-        });
-    }
-
-    startSliderAutoplay() {
-        if (this.slides.length > 1) {
-            setInterval(() => {
-                this.nextSlide();
-            }, 5000); // 5 seconds
-        }
-    }
-
-    // Load products
-    async loadProducts() {
-        try {
-            const response = await api.getProducts(this.productsLimit, this.productsLoaded);
-            if (response.success) {
-                this.products = [...this.products, ...response.products];
-                this.productsLoaded += response.products.length;
-                this.renderProducts();
-                
-                // Hide load more button if no more products
-                if (response.products.length < this.productsLimit) {
-                    const loadMoreBtn = document.getElementById('load-more-products');
-                    if (loadMoreBtn) {
-                        loadMoreBtn.style.display = 'none';
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Failed to load products:', error);
-            this.renderDefaultProducts();
-        }
-    }
-
-    // Render default products (fallback)
-    renderDefaultProducts() {
-        const defaultProducts = [
-            {
-                id: 1,
-                name: 'Sattu',
-                description: 'Premium quality atta made with traditional methods',
-                price: 60,
-                unit: 'kg',
-                image_url: '/images/sattu.jpg',
-                weight_options: '1,5,10',
-                in_stock: 1
-            },
-            {
-                id: 4,
-                name: 'Premium Wheat Atta',
-                description: 'Stone-milled whole wheat flour made from the finest quality wheat grains. Rich in fiber and nutrition',
-                price: 40,
-                unit: 'kg',
-                image_url: '/images/wheat-atta.jpg',
-                weight_options: '1,5,10,25',
-                in_stock: 1
-            }
-        ];
-        
-        this.products = defaultProducts;
-        this.renderProducts();
-    }
-
-    // Render products
-    renderProducts() {
-        const grid = document.getElementById('products-grid');
-        if (!grid) return;
-
-        grid.innerHTML = this.products.map(product => this.createProductCard(product)).join('');
-    }
-
-    // Create product card HTML - New Design
-    createProductCard(product) {
-        const weightOptions = product.weight_options ? product.weight_options.split(',') : ['1'];
-        const isInStock = product.in_stock === 1;
-        const originalPrice = product.original_price || Math.round(product.price * 1.08);
-        const discount = Math.round(((originalPrice - product.price) / originalPrice) * 100);
-        const lovedBy = product.loved_by || 0;
-        
-        return `
-            <div class="product-card" data-product-id="${product.id}">
-                ${discount > 0 ? `<div class="discount-badge">${discount}% OFF</div>` : ''}
-                
-                <div class="product-image-container">
-                    <img src="${product.image_url}" alt="${product.name}" 
-                         onerror="this.src='/images/placeholder-product.jpg'">
-                </div>
-                
-                <div class="product-details">
-                    <h3 class="product-title">${product.name}</h3>
-                    ${product.description ? `<p class="product-description text-sm text-gray-600 mt-1 line-clamp-2">${product.description}</p>` : ''}
-                    <div class="product-weight mt-2">${weightOptions[0]} ${product.unit}</div>
-                    
-                    <div class="price-section">
-                        <span class="current-price">₹${product.price}</span>
-                        ${discount > 0 ? `<span class="original-price">₹${originalPrice}</span>` : ''}
-                    </div>
-                    
-                    <div class="loved-by-section">
-                        <i class="fas fa-heart loved-heart ${lovedBy > 0 ? 'active' : 'inactive'}" 
-                           onclick="app.toggleLove(${product.id})" 
-                           data-product-id="${product.id}"></i>
-                        <span class="loved-text">Loved by <span class="loved-count" id="loved-count-${product.id}">${lovedBy}</span></span>
-                    </div>
-                    
-                    ${isInStock ? `
-                        <div class="product-buttons">
-                            <div class="product-buttons-row">
-                                <button class="btn-add-cart" onclick="app.addToCart(${product.id}, event)">
-                                    ADD TO CART
-                                </button>
-                                <button class="btn-buy-now" onclick="app.buyNow(${product.id}, event)">
-                                    BUY NOW
-                                </button>
-                            </div>
-                            <button class="btn-bulk-order" onclick="app.bulkOrder(${product.id})">
-                                <i class="fab fa-whatsapp"></i>
-                                BULK ORDER
-                            </button>
-                        </div>
-                    ` : `
-                        <div class="product-buttons">
-                            <button class="btn-add-cart" style="background: #9CA3AF; cursor: not-allowed;" disabled>
-                                OUT OF STOCK
-                            </button>
-                            <button class="btn-bulk-order" onclick="app.bulkOrder(${product.id})">
-                                <i class="fab fa-whatsapp"></i>
-                                BULK ORDER
-                            </button>
-                        </div>
-                    `}
-                </div>
-            </div>
-        `;
-    }
-
-    // Add to cart
-    addToCart(productId, event) {
-        const product = this.products.find(p => p.id === productId);
-        if (!product) {
-            console.error('Product not found:', productId);
-            return;
-        }
-
-        // Get selected weight - default to first option
-        let weight = '1kg';
-        if (event && event.target) {
-            const productCard = event.target.closest('.product-card');
-            if (productCard) {
-                const selectedWeight = productCard.querySelector('.weight-option.selected');
-                if (selectedWeight) {
-                    weight = selectedWeight.textContent;
-                }
-            }
-        }
-        
-        // Use first weight option from product if available
-        if (product.weight_options) {
-            const weights = product.weight_options.split(',');
-            weight = weights[0] + (product.unit || 'kg');
-        }
-
-        console.log('Adding to cart:', product.name, weight);
-        cart.addItem(product, weight);
-    }
-
-    // Buy now - Require login and open checkout
-    buyNow(productId, event) {
-        console.log('Buy Now clicked for product:', productId);
-        
-        const product = this.products.find(p => p.id === productId);
-        if (!product) {
-            console.error('Product not found:', productId);
-            utils.showToast('Product not found', 'error');
-            return;
-        }
-        
-        if (!auth.isLoggedIn()) {
-            utils.showToast('Please login to buy products', 'warning');
-            auth.showLoginModal();
-            return;
-        }
-        
-        // Add to cart first
-        this.addToCart(productId, event);
-        
-        // Show cart sidebar
-        setTimeout(() => {
-            cart.show();
-        }, 300);
-        
-        utils.showToast('Product added! Proceed to checkout.', 'success');
-    }
-
-    // Bulk order - Direct WhatsApp redirect with admin tracking
-    async bulkOrder(productId) {
-        const product = this.products.find(p => p.id === productId);
-        if (!product) return;
-
-        // Create WhatsApp message
-        const message = `Hello! I'm interested in bulk order for:\n\n` +
-                       `📦 Product: ${product.name}\n` +
-                       `💰 Price: ₹${product.price}/${product.unit}\n` +
-                       `📝 Description: ${product.description}\n\n` +
-                       `Please share bulk pricing and availability. Thank you!`;
-        
-        // Get user details if available
-        const user = auth.getCurrentUser();
-        const customerName = user?.name || 'Guest User';
-        const customerPhone = user?.phone_number || user?.phone || 'Not Available';
-        
-        // Save quick order to admin panel
-        try {
-            await fetch('/api/quick-orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    customer_name: customerName,
-                    customer_phone: customerPhone,
-                    message: message
-                })
-            });
-        } catch (error) {
-            console.error('Failed to save quick order:', error);
-        }
-        
-        const encodedMessage = encodeURIComponent(message);
-        const whatsappUrl = `https://wa.me/916201530654?text=${encodedMessage}`;
-        
-        // Open WhatsApp in new tab
-        window.open(whatsappUrl, '_blank');
-        
-        utils.showToast('Bulk order request sent! Check your WhatsApp.', 'success');
-    }
-
-    // Toggle love (heart icon) - requires login
-    async toggleLove(productId) {
-        // Check if user is logged in
-        if (!auth.isLoggedIn()) {
-            utils.showToast('Please login to add products to your favorites', 'warning');
-            auth.showLoginModal();
-            return;
-        }
-
-        try {
-            const product = this.products.find(p => p.id === productId);
-            if (!product) return;
-
-            const heartIcon = document.querySelector(`.loved-heart[data-product-id="${productId}"]`);
-            const lovedCountEl = document.getElementById(`loved-count-${productId}`);
-            
-            if (!heartIcon || !lovedCountEl) return;
-
-            // Toggle loved status
-            const isCurrentlyLoved = heartIcon.classList.contains('active');
-            const currentCount = parseInt(lovedCountEl.textContent) || 0;
-            
-            if (isCurrentlyLoved) {
-                // Unlike - decrease count
-                const newCount = Math.max(0, currentCount - 1);
-                lovedCountEl.textContent = newCount + 'k';
-                heartIcon.classList.remove('active');
-                heartIcon.classList.add('inactive');
-                product.loved_by = newCount;
-                utils.showToast('Removed from favorites', 'info');
-            } else {
-                // Like - increase count
-                const newCount = currentCount + 1;
-                lovedCountEl.textContent = newCount + 'k';
-                heartIcon.classList.remove('inactive');
-                heartIcon.classList.add('active');
-                product.loved_by = newCount;
-                utils.showToast('Added to favorites!', 'success');
-            }
-
-            // Update in backend
-            await this.updateProductLoved(productId, product.loved_by);
-
-        } catch (error) {
-            console.error('Toggle love error:', error);
-            utils.showToast('Failed to update. Please try again.', 'error');
-        }
-    }
-
-    // Update product loved count in backend
-    async updateProductLoved(productId, lovedCount) {
-        try {
-            await fetch(`/api/products/${productId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    loved_by: lovedCount
-                })
-            });
-        } catch (error) {
-            console.error('Failed to update loved count:', error);
-        }
-    }
-
-    // Load more products
-    async loadMoreProducts() {
-        const btn = document.getElementById('load-more-products');
-        const originalText = btn.innerHTML;
-        
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
-        btn.disabled = true;
-        
-        await this.loadProducts();
-        
-        btn.innerHTML = originalText;
-        btn.disabled = false;
-    }
-
-    // Handle quick order form
-    async handleQuickOrder(formData) {
-        try {
-            utils.showLoading();
-            
-            const orderData = {
-                name: formData.get('name'),
-                phone: formData.get('phone'),
-                requirements: formData.get('requirements')
-            };
-
-            const result = await api.submitContactForm(orderData);
-            
-            if (result.success) {
-                utils.showToast('Your message has been sent successfully!', 'success');
-                document.getElementById('quick-order-form').reset();
-            } else {
-                throw new Error(result.message || 'Failed to send message');
-            }
-            
-        } catch (error) {
-            console.error('Quick order error:', error);
-            utils.showToast('Failed to send message. Please try again.', 'error');
-        } finally {
-            utils.hideLoading();
-        }
-    }
-
-    // Open bulk order modal
-    openBulkOrderModal(product = null) {
-        const modal = utils.createModal(
-            'Bulk Order Request',
-            `
-                <form id="bulk-order-form" class="space-y-4">
-                    ${product ? `
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <h4 class="font-semibold mb-2">Selected Product:</h4>
-                            <div class="flex items-center gap-3">
-                                <img src="${product.image_url}" alt="${product.name}" class="w-16 h-16 object-cover rounded"
-                                     onerror="this.src='/images/placeholder-product.jpg'">
-                                <div>
-                                    <div class="font-medium">${product.name}</div>
-                                    <div class="text-sm text-gray-500">₹${product.price}/${product.unit}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="hidden" name="product_name" value="${product.name}">
-                    ` : ''}
-                    
-                    <div class="form-group">
-                        <label for="bulk_name">Your Name *</label>
-                        <input type="text" id="bulk_name" name="name" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="bulk_email">Email Address *</label>
-                        <input type="email" id="bulk_email" name="email" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="bulk_phone">Phone Number *</label>
-                        <input type="tel" id="bulk_phone" name="phone" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="bulk_quantity">Quantity Required</label>
-                        <input type="text" id="bulk_quantity" name="quantity" class="form-control" 
-                               placeholder="e.g., 100kg, 50 bags, etc.">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="bulk_requirements">Requirements *</label>
-                        <textarea id="bulk_requirements" name="requirements" rows="4" class="form-control" required
-                                  placeholder="Please describe your bulk order requirements in detail"></textarea>
-                    </div>
-                </form>
-            `,
-            [
-                {
-                    text: 'Cancel',
-                    class: 'btn-secondary',
-                    onclick: 'this.closest(\'.modal\').remove()'
-                },
-                {
-                    text: 'Send Request',
-                    class: 'btn-primary',
-                    onclick: 'app.submitBulkOrder(this.closest(\'.modal\'))'
-                }
-            ]
-        );
-    }
-
-    // Submit bulk order
-    async submitBulkOrder(modal) {
-        const form = modal.querySelector('#bulk-order-form');
-        const formData = new FormData(form);
-        
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
-        }
-
-        try {
-            utils.showLoading();
-            
-            const result = await api.submitBulkOrderRequest(Object.fromEntries(formData));
-            
-            if (result.success) {
-                utils.showToast('Bulk order request sent successfully!', 'success');
-                modal.remove();
-            } else {
-                throw new Error(result.message || 'Failed to send request');
-            }
-            
-        } catch (error) {
-            console.error('Bulk order error:', error);
-            utils.showToast('Failed to send request. Please try again.', 'error');
-        } finally {
-            utils.hideLoading();
-        }
-    }
-
-    // Handle scroll effects
-    handleScroll() {
-        const header = document.querySelector('header');
-        
-        if (window.scrollY > 100) {
-            header.classList.add('shadow-lg');
-        } else {
-            header.classList.remove('shadow-lg');
-        }
-        
-        // Animate elements on scroll
-        this.animateOnScroll();
-    }
-
-    // Animate elements on scroll
-    animateOnScroll() {
-        const elements = document.querySelectorAll('.animate-on-scroll');
-        
-        elements.forEach(element => {
-            const elementTop = element.getBoundingClientRect().top;
-            const elementVisible = 150;
-            
-            if (elementTop < window.innerHeight - elementVisible) {
-                element.classList.add('animate-fadeInUp');
-            }
-        });
-    }
+  document.getElementById('cartBtn').onclick = openCartDrawer;
+  if (customer) {
+    document.getElementById('profileBtn').onclick = openProfileMenu;
+  } else {
+    document.getElementById('loginBtn').onclick = () => openLoginModal();
+  }
 }
 
-// Global functions
-window.scrollToSection = function(sectionId) {
-    utils.scrollToSection(sectionId);
-};
+async function renderFooter() {
+  const settings = await getCachedSettings();
+  const footer = document.getElementById('sgFooter');
+  if (!footer) return;
 
-window.openBulkOrderModal = function() {
-    app.openBulkOrderModal();
-};
+  footer.innerHTML = `
+    <div class="sg-footer-inner">
+      <div>
+        <h4>${settings.site_name || 'Satyam Gold'}</h4>
+        <p style="font-size:13px;line-height:1.6">${settings.legal_entity || 'Satyam Gold is a brand owned and operated by Satyam Food Product'}</p>
+        <div class="socials">
+          ${settings.facebook_url ? `<a href="${settings.facebook_url}" target="_blank" aria-label="Facebook">f</a>` : ''}
+          ${settings.instagram_url ? `<a href="${settings.instagram_url}" target="_blank" aria-label="Instagram">📷</a>` : ''}
+          ${settings.youtube_url ? `<a href="${settings.youtube_url}" target="_blank" aria-label="YouTube">▶</a>` : ''}
+          ${settings.whatsapp_chat_url ? `<a href="${settings.whatsapp_chat_url}" target="_blank" aria-label="WhatsApp">💬</a>` : ''}
+        </div>
+      </div>
+      <div>
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/#products">Products</a></li>
+          <li><a href="/pages/track.html">Track Order</a></li>
+          <li><a href="/pages/about.html">About Us</a></li>
+          <li><a href="/pages/contact.html">Contact Us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Policies</h4>
+        <ul>
+          <li><a href="/pages/privacy.html">Privacy Policy</a></li>
+          <li><a href="/pages/terms.html">Terms &amp; Conditions</a></li>
+          <li><a href="/pages/return.html">Return Policy</a></li>
+          <li><a href="/pages/refund.html">Refund &amp; Cancellation</a></li>
+          <li><a href="/pages/shipping.html">Shipping Policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li>📞 ${settings.phone_number || ''}</li>
+          <li>✉️ ${settings.email_address || ''}</li>
+          <li>📍 ${settings.business_address || ''}</li>
+        </ul>
+      </div>
+    </div>
+    <div class="sg-footer-bottom">
+      ${settings.footer_text || '© 2026 Satyam Gold. All rights reserved.'}
+    </div>
+  `;
+}
 
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new SatyamGoldApp();
+// ----- Hero Slider -----
+async function renderHero() {
+  const wrap = document.getElementById('sgHero');
+  if (!wrap) return;
+  const { data: slides } = await sb
+    .from('hero_slides')
+    .select('*')
+    .eq('active', true)
+    .order('sort_order', { ascending: true });
+
+  if (!slides || slides.length === 0) { wrap.style.display = 'none'; return; }
+
+  wrap.innerHTML = `
+    <div class="slides">
+      ${slides.map((s, i) => `
+        <div class="slide ${i === 0 ? 'active' : ''}" style="background-image:url('${s.image_url}')">
+          <h1>${s.title || ''}</h1>
+          <p>${s.subtitle || ''}</p>
+          ${s.button_text ? `<a class="cta" href="${s.button_link || '#products'}">${s.button_text}</a>` : ''}
+        </div>
+      `).join('')}
+      <div class="dots">
+        ${slides.map((_, i) => `<span class="${i === 0 ? 'active' : ''}" data-i="${i}"></span>`).join('')}
+      </div>
+    </div>
+  `;
+
+  const slideEls = wrap.querySelectorAll('.slide');
+  const dotEls = wrap.querySelectorAll('.dots span');
+  let idx = 0;
+  const goTo = (i) => {
+    slideEls.forEach((s, k) => s.classList.toggle('active', k === i));
+    dotEls.forEach((d, k) => d.classList.toggle('active', k === i));
+    idx = i;
+  };
+  dotEls.forEach((d, k) => d.onclick = () => goTo(k));
+  if (slides.length > 1) {
+    setInterval(() => goTo((idx + 1) % slides.length), 5000);
+  }
+}
+
+// ----- Products -----
+async function loadMyLoves() {
+  const c = SG.getCustomer();
+  _myLoves = new Set();
+  if (!c) return;
+  const { data } = await sb.from('product_loves').select('product_id').eq('customer_phone', c.phone);
+  (data || []).forEach(r => _myLoves.add(r.product_id));
+}
+
+function productCardHTML(p) {
+  const discount = SG.calcDiscount(p.mrp, p.price);
+  const totalLoved = (Number(p.loved_by_base) || 0) + (Number(p.loved_by_real) || 0);
+  const lovedFmt = SG.formatLoved(totalLoved);
+  const loved = _myLoves.has(p.id);
+  const inStock = p.in_stock !== false;
+
+  return `
+    <div class="sg-card" data-id="${p.id}">
+      <div class="img-wrap">
+        ${discount > 0 ? `<span class="badge-discount">${discount}% OFF</span>` : ''}
+        <img class="product-img" src="${p.image_url || ''}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.style.opacity=0.3">
+      </div>
+      <div class="body">
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="desc">${escapeHtml(p.description || '')}</div>
+        <div class="weight">${escapeHtml(p.weight || '1 kg')}</div>
+        <div class="price-row">
+          <span class="price">${SG.money(p.price)}</span>
+          ${p.mrp > p.price ? `<span class="mrp">${SG.money(p.mrp)}</span>` : ''}
+        </div>
+        <div class="loved ${loved ? 'active' : ''}" data-action="love">
+          <span class="heart">${loved ? '❤️' : '🤍'}</span>
+          <span>Loved by ${lovedFmt}</span>
+        </div>
+        <div class="actions">
+          ${inStock ? `
+            <button class="sg-btn sg-btn-primary" data-action="add">ADD TO CART</button>
+            <button class="sg-btn sg-btn-outline" data-action="buy">BUY NOW</button>
+          ` : `
+            <button class="sg-btn sg-btn-disabled" disabled>OUT OF STOCK</button>
+          `}
+        </div>
+        <button class="sg-btn sg-btn-success bulk" data-action="bulk">💬 BULK ORDER</button>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+}
+
+async function renderProducts() {
+  const grid = document.getElementById('sgProducts');
+  if (!grid) return;
+
+  // Skeleton
+  grid.innerHTML = Array(4).fill(0).map(() =>
+    `<div class="sg-card"><div class="img-wrap skeleton" style="aspect-ratio:1/1"></div>
+     <div class="body"><div class="skeleton" style="height:18px;width:60%"></div>
+     <div class="skeleton" style="height:14px;width:90%;margin-top:6px"></div></div></div>`
+  ).join('');
+
+  const { data: products, error } = await sb
+    .from('products')
+    .select('*')
+    .order('sort_order', { ascending: true });
+
+  if (error) { console.error(error); grid.innerHTML = '<p>Failed to load products.</p>'; return; }
+  _allProducts = products || [];
+  await loadMyLoves();
+
+  if (_allProducts.length === 0) {
+    grid.innerHTML = '<div class="empty"><p>No products available yet.</p></div>';
+    return;
+  }
+  grid.innerHTML = _allProducts.map(productCardHTML).join('');
+
+  grid.addEventListener('click', onProductClick);
+}
+
+async function onProductClick(e) {
+  const card = e.target.closest('.sg-card');
+  if (!card) return;
+  const id = Number(card.dataset.id);
+  const product = _allProducts.find(p => p.id === id);
+  if (!product) return;
+
+  const action = e.target.closest('[data-action]')?.dataset.action;
+  if (!action) return;
+
+  if (action === 'add') {
+    SG.addToCart(product, 1);
+    SG.toast('Added to cart', 'success');
+  } else if (action === 'buy') {
+    SG.addToCart(product, 1);
+    openCheckout();
+  } else if (action === 'bulk') {
+    const settings = await getCachedSettings();
+    const wa = (settings.whatsapp_number || '8252487551').replace(/\D/g, '');
+    const msg = encodeURIComponent(`Hi, I'd like to place a BULK ORDER for: ${product.name} (${product.weight || '1 kg'})`);
+    window.open(`https://wa.me/91${wa}?text=${msg}`, '_blank');
+  } else if (action === 'love') {
+    await toggleLove(product, card);
+  }
+}
+
+async function toggleLove(product, cardEl) {
+  const customer = SG.getCustomer();
+  if (!customer) {
+    openLoginModal();
+    return;
+  }
+
+  const already = _myLoves.has(product.id);
+
+  if (already) {
+    // remove
+    await sb.from('product_loves').delete().eq('product_id', product.id).eq('customer_phone', customer.phone);
+    _myLoves.delete(product.id);
+    product.loved_by_real = Math.max(0, (product.loved_by_real || 0) - 1);
+    await sb.from('products').update({ loved_by_real: product.loved_by_real }).eq('id', product.id);
+  } else {
+    // add
+    const { error } = await sb.from('product_loves').insert({ product_id: product.id, customer_phone: customer.phone });
+    if (error && !String(error.message).includes('duplicate')) {
+      SG.toast('Failed to update', 'error'); return;
+    }
+    _myLoves.add(product.id);
+    product.loved_by_real = (product.loved_by_real || 0) + 1;
+    await sb.from('products').update({ loved_by_real: product.loved_by_real }).eq('id', product.id);
+  }
+
+  // Update DOM
+  const total = (Number(product.loved_by_base) || 0) + (Number(product.loved_by_real) || 0);
+  const lovedEl = cardEl.querySelector('[data-action="love"]');
+  lovedEl.classList.toggle('active', _myLoves.has(product.id));
+  lovedEl.querySelector('.heart').textContent = _myLoves.has(product.id) ? '❤️' : '🤍';
+  lovedEl.querySelector('span:last-child').textContent = `Loved by ${SG.formatLoved(total)}`;
+}
+
+// ----- Cart Drawer -----
+function openCartDrawer() {
+  const cart = SG.getCart();
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sg-drawer-backdrop';
+
+  const drawer = document.createElement('aside');
+  drawer.className = 'sg-drawer';
+
+  const renderBody = () => {
+    const items = SG.getCart();
+    if (items.length === 0) {
+      return `<div class="empty"><p>Your cart is empty</p></div>`;
+    }
+    return items.map(it => `
+      <div class="cart-item" data-id="${it.id}">
+        <img src="${it.image_url || ''}" alt="${escapeHtml(it.name)}">
+        <div class="info">
+          <div class="nm">${escapeHtml(it.name)}</div>
+          <div style="font-size:12px;color:#6b7280">${escapeHtml(it.weight || '1 kg')}</div>
+          <div class="pr">${SG.money(it.price)} × ${it.qty}</div>
+          <div class="qty">
+            <button data-act="dec">−</button>
+            <span>${it.qty}</span>
+            <button data-act="inc">+</button>
+            <button class="rm" data-act="rm" title="Remove">🗑</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  };
+
+  const total = SG.cartTotal();
+  drawer.innerHTML = `
+    <div class="sg-drawer-header">
+      <h3>🛒 Your Cart</h3>
+      <button class="close" id="cartClose">&times;</button>
+    </div>
+    <div class="sg-drawer-body" id="cartBody">${renderBody()}</div>
+    <div class="sg-drawer-footer">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <span>Total:</span><b style="font-size:18px">${SG.money(total)}</b>
+      </div>
+      <button class="sg-btn sg-btn-primary" id="checkoutBtn" style="width:100%" ${cart.length === 0 ? 'disabled' : ''}>
+        Proceed to Checkout
+      </button>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+  document.body.appendChild(drawer);
+
+  const close = () => { backdrop.remove(); drawer.remove(); };
+  backdrop.onclick = close;
+  drawer.querySelector('#cartClose').onclick = close;
+
+  drawer.querySelector('#cartBody').addEventListener('click', (e) => {
+    const item = e.target.closest('.cart-item');
+    if (!item) return;
+    const id = Number(item.dataset.id);
+    const act = e.target.dataset.act;
+    if (!act) return;
+    const c = SG.getCart().find(i => i.id === id);
+    if (act === 'inc') SG.updateCartQty(id, (c?.qty || 1) + 1);
+    if (act === 'dec') {
+      if ((c?.qty || 1) <= 1) SG.removeFromCart(id);
+      else SG.updateCartQty(id, c.qty - 1);
+    }
+    if (act === 'rm') SG.removeFromCart(id);
+
+    drawer.querySelector('#cartBody').innerHTML = renderBody();
+    drawer.querySelector('.sg-drawer-footer b').textContent = SG.money(SG.cartTotal());
+    renderHeader();
+  });
+
+  drawer.querySelector('#checkoutBtn').onclick = () => {
+    close();
+    openCheckout();
+  };
+}
+
+// ----- Checkout -----
+async function openCheckout() {
+  if (SG.getCart().length === 0) { SG.toast('Cart is empty', 'error'); return; }
+  let customer = SG.getCustomer();
+  if (!customer) {
+    SG.toast('Please login to continue', 'info');
+    openLoginModal();
+    return;
+  }
+  // Refresh customer
+  customer = await SGAuth.refreshCustomer() || customer;
+
+  const total = SG.cartTotal();
+  const overlay = document.createElement('div');
+  overlay.className = 'sg-modal-backdrop';
+  overlay.innerHTML = `
+    <div class="sg-modal" style="max-width:520px">
+      <div class="sg-modal-header">
+        <h3>Checkout</h3>
+        <button class="close" id="coClose">&times;</button>
+      </div>
+      <div class="sg-modal-body">
+        <h4 style="margin-bottom:8px;font-size:14px;color:#6b7280">Order Summary</h4>
+        <div style="background:#f9fafb;padding:10px;border-radius:8px;margin-bottom:14px">
+          ${SG.getCart().map(i => `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+            <span>${escapeHtml(i.name)} × ${i.qty}</span><span>${SG.money(i.price * i.qty)}</span>
+          </div>`).join('')}
+          <hr style="margin:8px 0">
+          <div style="display:flex;justify-content:space-between;font-weight:700"><span>Total</span><span>${SG.money(total)}</span></div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <label style="font-size:12px"><input type="checkbox" id="useSaved" ${customer.default_address ? 'checked' : ''} ${customer.default_address ? '' : 'disabled'}> Use saved address</label>
+        </div>
+
+        <div class="sg-field"><label>Full Name</label><input id="coName" value="${escapeHtml(customer.name || '')}"></div>
+        <div class="sg-field"><label>Phone</label><input id="coPhone" value="${customer.phone}" readonly></div>
+        <div class="sg-field"><label>Alternate Phone</label><input id="coAlt" value="${escapeHtml(customer.default_alt_phone || '')}"></div>
+        <div class="sg-field"><label>Address</label><textarea id="coAddr" rows="2">${escapeHtml(customer.default_address || '')}</textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="sg-field"><label>Pincode</label><input id="coPin" value="${escapeHtml(customer.default_pincode || '')}"></div>
+          <div class="sg-field"><label>Ward No.</label><input id="coWard" value="${escapeHtml(customer.default_ward || '')}"></div>
+        </div>
+
+        <div class="sg-field">
+          <label>Payment Method</label>
+          <select id="coPay">
+            <option value="COD">Cash on Delivery (COD)</option>
+            <option value="ONLINE">Online (Cashfree) - coming soon</option>
+          </select>
+        </div>
+
+        <button class="sg-btn sg-btn-primary" id="coPlace" style="width:100%">Place Order ${SG.money(total)}</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#coClose').onclick = () => overlay.remove();
+
+  const useSaved = overlay.querySelector('#useSaved');
+  useSaved?.addEventListener('change', () => {
+    if (useSaved.checked) {
+      overlay.querySelector('#coAddr').value = customer.default_address || '';
+      overlay.querySelector('#coPin').value = customer.default_pincode || '';
+      overlay.querySelector('#coWard').value = customer.default_ward || '';
+      overlay.querySelector('#coAlt').value = customer.default_alt_phone || '';
+    }
+  });
+
+  overlay.querySelector('#coPlace').onclick = async () => {
+    const name = overlay.querySelector('#coName').value.trim();
+    const addr = overlay.querySelector('#coAddr').value.trim();
+    const pin = overlay.querySelector('#coPin').value.trim();
+    const ward = overlay.querySelector('#coWard').value.trim();
+    const alt = overlay.querySelector('#coAlt').value.trim();
+    const pay = overlay.querySelector('#coPay').value;
+
+    if (!name || !addr || !pin) { SG.toast('Please fill name, address and pincode', 'error'); return; }
+    const btn = overlay.querySelector('#coPlace');
+    btn.disabled = true; btn.innerHTML = '<span class="sg-loader"></span> Placing...';
+
+    try {
+      // Update customer default address
+      await sb.from('customers').update({
+        name, default_address: addr, default_pincode: pin, default_ward: ward, default_alt_phone: alt
+      }).eq('phone', customer.phone);
+
+      const orderNumber = 'SG-' + Date.now();
+      const items = SG.getCart();
+      const subtotal = SG.cartTotal();
+
+      const { data: order, error } = await sb.from('orders').insert({
+        order_number: orderNumber,
+        customer_phone: customer.phone,
+        customer_name: name,
+        customer_email: customer.email,
+        address: addr,
+        pincode: pin,
+        ward_no: ward,
+        alt_phone: alt,
+        items: items,
+        subtotal: subtotal,
+        shipping: 0,
+        total: subtotal,
+        payment_method: pay,
+        payment_status: pay === 'COD' ? 'COD' : 'Pending',
+        status: 'Pending'
+      }).select().single();
+
+      if (error) throw error;
+
+      SG.setCart([]);
+      overlay.remove();
+      SG.toast(`Order ${orderNumber} placed!`, 'success');
+
+      // Show confirmation modal
+      showOrderPlaced(order);
+      renderHeader();
+    } catch (e) {
+      console.error(e);
+      SG.toast(e.message || 'Failed to place order', 'error');
+      btn.disabled = false; btn.textContent = `Place Order ${SG.money(total)}`;
+    }
+  };
+}
+
+function showOrderPlaced(order) {
+  const overlay = document.createElement('div');
+  overlay.className = 'sg-modal-backdrop';
+  overlay.innerHTML = `
+    <div class="sg-modal">
+      <div class="sg-modal-body" style="text-align:center;padding:30px">
+        <div style="font-size:60px">✅</div>
+        <h2 style="margin:10px 0;color:var(--green-dark)">Order Placed!</h2>
+        <p style="color:#6b7280">Order Number: <b>${order.order_number}</b></p>
+        <p style="color:#6b7280;margin:10px 0">Total: <b>${SG.money(order.total)}</b></p>
+        <p style="font-size:13px">We'll contact you on <b>${order.customer_phone}</b> shortly.</p>
+        <div style="display:flex;gap:8px;margin-top:20px">
+          <a class="sg-btn sg-btn-outline" href="/pages/track.html?o=${order.order_number}">Track Order</a>
+          <button class="sg-btn sg-btn-primary" id="okBtn">Continue Shopping</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#okBtn').onclick = () => { overlay.remove(); location.href = '/'; };
+}
+
+// ----- Profile Menu -----
+function openProfileMenu() {
+  const customer = SG.getCustomer();
+  if (!customer) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'sg-modal-backdrop';
+  overlay.innerHTML = `
+    <div class="sg-modal">
+      <div class="sg-modal-header">
+        <h3>👤 ${escapeHtml(customer.name || 'Profile')}</h3>
+        <button class="close" id="pmClose">&times;</button>
+      </div>
+      <div class="sg-modal-body">
+        <p style="font-size:13px;color:#6b7280;margin-bottom:8px">📞 ${customer.phone}</p>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <a class="sg-btn sg-btn-outline" href="/pages/track.html">📦 My Orders</a>
+          <a class="sg-btn sg-btn-outline" href="/pages/profile.html">✏️ Edit Profile</a>
+          <button class="sg-btn sg-btn-primary" id="logoutBtn">🚪 Logout</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#pmClose').onclick = () => overlay.remove();
+  overlay.querySelector('#logoutBtn').onclick = () => {
+    SGAuth.logout();
+    overlay.remove();
+    renderHeader();
+  };
+}
+
+// ----- WhatsApp Float -----
+async function renderWAFloat() {
+  const settings = await getCachedSettings();
+  const wa = (settings.whatsapp_number || '8252487551').replace(/\D/g, '');
+  const url = settings.whatsapp_chat_url || `https://wa.me/91${wa}`;
+  const el = document.getElementById('sgWAFloat');
+  if (el) el.href = url;
+}
+
+// ----- INIT -----
+document.addEventListener('DOMContentLoaded', async () => {
+  await renderHeader();
+  await renderHero();
+  await renderProducts();
+  await renderFooter();
+  await renderWAFloat();
+});
+
+document.addEventListener('sg:cart-changed', renderHeader);
+document.addEventListener('sg:auth-changed', async () => {
+  await renderHeader();
+  await loadMyLoves();
+  await renderProducts();
 });

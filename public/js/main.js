@@ -1,11 +1,11 @@
 // ============================================================
-// SATYAM GOLD - Main Frontend Logic
+// SATYAM GOLD - Main Frontend Logic (Professional Edition)
 // ============================================================
 
 let _allProducts = [];
-let _myLoves = new Set(); // product IDs the current customer has loved
+let _myLoves = new Set();
 
-// ----- Header / Footer Renderers -----
+// ----- Header -----
 async function renderHeader() {
   const settings = await getCachedSettings();
   const customer = SG.getCustomer();
@@ -24,14 +24,14 @@ async function renderHeader() {
         <a href="/">Home</a>
         <a href="/#products">Products</a>
         <a href="/pages/track.html">Track Order</a>
-        <a href="/pages/contact.html">Contact</a>
+        <a href="/#contact-us">Contact</a>
         <a href="/pages/about.html">About</a>
         <button class="icon-btn keep" id="cartBtn" title="Cart">
-          🛒
+          ${SGIcons.cart}
           ${cartCount > 0 ? `<span class="badge">${cartCount}</span>` : ''}
         </button>
         ${customer
-          ? `<button class="keep" id="profileBtn" title="${customer.name}">👤 ${(customer.name || 'You').split(' ')[0]}</button>`
+          ? `<button class="keep" id="profileBtn" title="${customer.name}" style="display:inline-flex;align-items:center;gap:6px">${SGIcons.user} ${(customer.name || 'You').split(' ')[0]}</button>`
           : `<button class="keep" id="loginBtn">Login</button>`
         }
       </nav>
@@ -46,21 +46,113 @@ async function renderHeader() {
   }
 }
 
+// ----- Contact Section (above footer) -----
+async function renderContactSection() {
+  const settings = await getCachedSettings();
+  const wrap = document.getElementById('sgContact');
+  if (!wrap) return;
+  const phone = settings.phone_number || '8252487551';
+  const wa = (settings.whatsapp_number || phone).replace(/\D/g, '');
+  const email = settings.email_address || 'satyamgold@gmail.com';
+  const addr = settings.business_address || 'Bidyadhar, Khagaria, Bihar - 851204';
+
+  wrap.innerHTML = `
+    <div class="sg-contact-inner">
+      <div class="sg-contact-title">
+        <h2>Contact Us</h2>
+        <p>Get in touch with us for any queries or support</p>
+      </div>
+      <div class="sg-contact-grid">
+        <div class="sg-contact-info">
+          <h3>Get in Touch</h3>
+          <div class="info-row">
+            <span class="ico phone-ico">${SGIcons.phone}</span>
+            <a href="tel:${phone}">${phone}</a>
+          </div>
+          <div class="info-row">
+            <span class="ico wa-ico">${SGIcons.whatsapp}</span>
+            <a href="https://wa.me/91${wa}" target="_blank">${wa}</a>
+          </div>
+          <div class="info-row">
+            <span class="ico mail-ico">${SGIcons.mail}</span>
+            <a href="mailto:${email}">${email}</a>
+          </div>
+          <div class="info-row">
+            <span class="ico pin-ico">${SGIcons.pin}</span>
+            <span>${escapeHtml(addr)}</span>
+          </div>
+        </div>
+        <div class="sg-contact-form">
+          <h3>Quick Order</h3>
+          <input id="qoName" placeholder="Your Name">
+          <input id="qoPhone" placeholder="Phone Number" maxlength="10">
+          <textarea id="qoMsg" rows="4" placeholder="Your Requirements"></textarea>
+          <button id="qoSend">Send Message</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('qoSend').onclick = async () => {
+    const name = document.getElementById('qoName').value.trim();
+    const ph = document.getElementById('qoPhone').value.trim();
+    const msg = document.getElementById('qoMsg').value.trim();
+    if (!name || !ph || !msg) { SG.toast('Please fill all fields', 'error'); return; }
+    const btn = document.getElementById('qoSend');
+    btn.disabled = true; btn.innerHTML = '<span class="sg-loader"></span> Sending...';
+    const { error } = await sb.from('contact_messages').insert({ name, phone: ph, message: msg });
+    btn.disabled = false; btn.textContent = 'Send Message';
+    if (error) { SG.toast(error.message, 'error'); return; }
+    SG.toast('Message sent! We will contact you soon.', 'success');
+    document.getElementById('qoName').value = '';
+    document.getElementById('qoPhone').value = '';
+    document.getElementById('qoMsg').value = '';
+  };
+}
+
+// ----- Map Section -----
+async function renderMap() {
+  const settings = await getCachedSettings();
+  const wrap = document.getElementById('sgMap');
+  if (!wrap) return;
+  const mapUrl = settings.map_embed_url ||
+    'https://www.google.com/maps?q=Khagaria,Bihar,India&output=embed';
+  const addr = settings.business_address || 'Bidyadhar, Khagaria, Bihar - 851204';
+  wrap.innerHTML = `
+    <div class="sg-map-title">
+      <h2>📍 Find Us</h2>
+      <p>${escapeHtml(addr)}</p>
+    </div>
+    <div class="sg-map-wrap">
+      <iframe src="${mapUrl}" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  `;
+}
+
+// ----- Footer (Professional) -----
 async function renderFooter() {
   const settings = await getCachedSettings();
   const footer = document.getElementById('sgFooter');
   if (!footer) return;
+  const phone = settings.phone_number || '8252487551';
+  const wa = (settings.whatsapp_number || phone).replace(/\D/g, '');
+  const email = settings.email_address || 'satyamgold@gmail.com';
+  const addr = settings.business_address || 'Bidyadhar, Khagaria, Bihar - 851204';
 
   footer.innerHTML = `
     <div class="sg-footer-inner">
-      <div>
-        <h4>${settings.site_name || 'Satyam Gold'}</h4>
-        <p style="font-size:13px;line-height:1.6">${settings.legal_entity || 'Satyam Gold is a brand owned and operated by Satyam Food Product'}</p>
+      <div class="brand-block">
+        <div class="logo-row">
+          ${settings.site_logo ? `<img src="${settings.site_logo}" alt="logo">` : ''}
+          <span class="nm">${settings.site_name || 'Satyam Gold'}</span>
+        </div>
+        <p>${settings.legal_entity || 'Satyam Gold is a brand owned and operated by Satyam Food Product'}.</p>
+        <p style="margin-top:8px;font-size:12px">${settings.footer_tagline || 'Pure & tasty premium quality food products, delivered fresh.'}</p>
         <div class="socials">
-          ${settings.facebook_url ? `<a href="${settings.facebook_url}" target="_blank" aria-label="Facebook">f</a>` : ''}
-          ${settings.instagram_url ? `<a href="${settings.instagram_url}" target="_blank" aria-label="Instagram">📷</a>` : ''}
-          ${settings.youtube_url ? `<a href="${settings.youtube_url}" target="_blank" aria-label="YouTube">▶</a>` : ''}
-          ${settings.whatsapp_chat_url ? `<a href="${settings.whatsapp_chat_url}" target="_blank" aria-label="WhatsApp">💬</a>` : ''}
+          <a href="https://wa.me/91${wa}" target="_blank" class="wa" aria-label="WhatsApp">${SGIcons.whatsapp}</a>
+          ${settings.facebook_url ? `<a href="${settings.facebook_url}" target="_blank" class="fb" aria-label="Facebook">${SGIcons.facebook}</a>` : ''}
+          ${settings.instagram_url ? `<a href="${settings.instagram_url}" target="_blank" class="ig" aria-label="Instagram">${SGIcons.instagram}</a>` : ''}
+          ${settings.youtube_url ? `<a href="${settings.youtube_url}" target="_blank" class="yt" aria-label="YouTube">${SGIcons.youtube}</a>` : ''}
         </div>
       </div>
       <div>
@@ -79,21 +171,25 @@ async function renderFooter() {
           <li><a href="/pages/privacy.html">Privacy Policy</a></li>
           <li><a href="/pages/terms.html">Terms &amp; Conditions</a></li>
           <li><a href="/pages/return.html">Return Policy</a></li>
-          <li><a href="/pages/refund.html">Refund &amp; Cancellation</a></li>
+          <li><a href="/pages/refund.html">Refund Policy</a></li>
           <li><a href="/pages/shipping.html">Shipping Policy</a></li>
         </ul>
       </div>
       <div>
         <h4>Contact</h4>
-        <ul>
-          <li>📞 ${settings.phone_number || ''}</li>
-          <li>✉️ ${settings.email_address || ''}</li>
-          <li>📍 ${settings.business_address || ''}</li>
-        </ul>
+        <div class="contact-row"><span class="ico-circle">${SGIcons.phone}</span>
+          <span><a href="tel:${phone}"><b>${phone}</b></a><br>
+          <small style="color:#78716c">Mobile / Call</small></span></div>
+        <div class="contact-row"><span class="ico-circle">${SGIcons.whatsapp}</span>
+          <span><a href="https://wa.me/91${wa}" target="_blank"><b>WhatsApp ${wa}</b></a><br>
+          <small style="color:#78716c">Tap to chat 24×7</small></span></div>
+        <div class="contact-row"><span class="ico-circle">${SGIcons.mail}</span><a href="mailto:${email}">${email}</a></div>
+        <div class="contact-row"><span class="ico-circle">${SGIcons.pin}</span><span>${escapeHtml(addr)}</span></div>
       </div>
     </div>
     <div class="sg-footer-bottom">
-      ${settings.footer_text || '© 2026 Satyam Gold. All rights reserved.'}
+      <div>${settings.footer_text || '© 2026 Satyam Gold. All rights reserved.'}</div>
+      <div class="made-with">Brand owned & operated by <strong>Satyam Food Product</strong> · Made with ❤️ in Bihar</div>
     </div>
   `;
 }
@@ -114,9 +210,9 @@ async function renderHero() {
     <div class="slides">
       ${slides.map((s, i) => `
         <div class="slide ${i === 0 ? 'active' : ''}" style="background-image:url('${s.image_url}')">
-          <h1>${s.title || ''}</h1>
-          <p>${s.subtitle || ''}</p>
-          ${s.button_text ? `<a class="cta" href="${s.button_link || '#products'}">${s.button_text}</a>` : ''}
+          <h1>${escapeHtml(s.title || '')}</h1>
+          <p>${escapeHtml(s.subtitle || '')}</p>
+          ${s.button_text ? `<a class="cta" href="${s.button_link || '#products'}">${escapeHtml(s.button_text)}</a>` : ''}
         </div>
       `).join('')}
       <div class="dots">
@@ -134,9 +230,7 @@ async function renderHero() {
     idx = i;
   };
   dotEls.forEach((d, k) => d.onclick = () => goTo(k));
-  if (slides.length > 1) {
-    setInterval(() => goTo((idx + 1) % slides.length), 5000);
-  }
+  if (slides.length > 1) setInterval(() => goTo((idx + 1) % slides.length), 5000);
 }
 
 // ----- Products -----
@@ -170,7 +264,7 @@ function productCardHTML(p) {
           ${p.mrp > p.price ? `<span class="mrp">${SG.money(p.mrp)}</span>` : ''}
         </div>
         <div class="loved ${loved ? 'active' : ''}" data-action="love">
-          <span class="heart">${loved ? '❤️' : '🤍'}</span>
+          <span class="heart">${loved ? SGIcons.heart : SGIcons.heartOutline}</span>
           <span>Loved by ${lovedFmt}</span>
         </div>
         <div class="actions">
@@ -181,7 +275,7 @@ function productCardHTML(p) {
             <button class="sg-btn sg-btn-disabled" disabled>OUT OF STOCK</button>
           `}
         </div>
-        <button class="sg-btn sg-btn-success bulk" data-action="bulk">💬 BULK ORDER</button>
+        <button class="sg-btn sg-btn-success bulk" data-action="bulk">${SGIcons.whatsapp} BULK ORDER</button>
       </div>
     </div>
   `;
@@ -195,7 +289,6 @@ async function renderProducts() {
   const grid = document.getElementById('sgProducts');
   if (!grid) return;
 
-  // Skeleton
   grid.innerHTML = Array(4).fill(0).map(() =>
     `<div class="sg-card"><div class="img-wrap skeleton" style="aspect-ratio:1/1"></div>
      <div class="body"><div class="skeleton" style="height:18px;width:60%"></div>
@@ -256,13 +349,11 @@ async function toggleLove(product, cardEl) {
   const already = _myLoves.has(product.id);
 
   if (already) {
-    // remove
     await sb.from('product_loves').delete().eq('product_id', product.id).eq('customer_phone', customer.phone);
     _myLoves.delete(product.id);
     product.loved_by_real = Math.max(0, (product.loved_by_real || 0) - 1);
     await sb.from('products').update({ loved_by_real: product.loved_by_real }).eq('id', product.id);
   } else {
-    // add
     const { error } = await sb.from('product_loves').insert({ product_id: product.id, customer_phone: customer.phone });
     if (error && !String(error.message).includes('duplicate')) {
       SG.toast('Failed to update', 'error'); return;
@@ -272,11 +363,10 @@ async function toggleLove(product, cardEl) {
     await sb.from('products').update({ loved_by_real: product.loved_by_real }).eq('id', product.id);
   }
 
-  // Update DOM
   const total = (Number(product.loved_by_base) || 0) + (Number(product.loved_by_real) || 0);
   const lovedEl = cardEl.querySelector('[data-action="love"]');
   lovedEl.classList.toggle('active', _myLoves.has(product.id));
-  lovedEl.querySelector('.heart').textContent = _myLoves.has(product.id) ? '❤️' : '🤍';
+  lovedEl.querySelector('.heart').innerHTML = _myLoves.has(product.id) ? SGIcons.heart : SGIcons.heartOutline;
   lovedEl.querySelector('span:last-child').textContent = `Loved by ${SG.formatLoved(total)}`;
 }
 
@@ -315,7 +405,7 @@ function openCartDrawer() {
   const total = SG.cartTotal();
   drawer.innerHTML = `
     <div class="sg-drawer-header">
-      <h3>🛒 Your Cart</h3>
+      <h3 style="display:flex;align-items:center;gap:8px">${SGIcons.cart} Your Cart</h3>
       <button class="close" id="cartClose">&times;</button>
     </div>
     <div class="sg-drawer-body" id="cartBody">${renderBody()}</div>
@@ -370,7 +460,6 @@ async function openCheckout() {
     openLoginModal();
     return;
   }
-  // Refresh customer
   customer = await SGAuth.refreshCustomer() || customer;
 
   const total = SG.cartTotal();
@@ -443,7 +532,6 @@ async function openCheckout() {
     btn.disabled = true; btn.innerHTML = '<span class="sg-loader"></span> Placing...';
 
     try {
-      // Update customer default address
       await sb.from('customers').update({
         name, default_address: addr, default_pincode: pin, default_ward: ward, default_alt_phone: alt
       }).eq('phone', customer.phone);
@@ -475,8 +563,6 @@ async function openCheckout() {
       SG.setCart([]);
       overlay.remove();
       SG.toast(`Order ${orderNumber} placed!`, 'success');
-
-      // Show confirmation modal
       showOrderPlaced(order);
       renderHeader();
     } catch (e) {
@@ -493,7 +579,7 @@ function showOrderPlaced(order) {
   overlay.innerHTML = `
     <div class="sg-modal">
       <div class="sg-modal-body" style="text-align:center;padding:30px">
-        <div style="font-size:60px">✅</div>
+        <div style="font-size:60px;animation:pop .5s ease">✅</div>
         <h2 style="margin:10px 0;color:var(--green-dark)">Order Placed!</h2>
         <p style="color:#6b7280">Order Number: <b>${order.order_number}</b></p>
         <p style="color:#6b7280;margin:10px 0">Total: <b>${SG.money(order.total)}</b></p>
@@ -509,7 +595,6 @@ function showOrderPlaced(order) {
   overlay.querySelector('#okBtn').onclick = () => { overlay.remove(); location.href = '/'; };
 }
 
-// ----- Profile Menu -----
 function openProfileMenu() {
   const customer = SG.getCustomer();
   if (!customer) return;
@@ -519,7 +604,7 @@ function openProfileMenu() {
   overlay.innerHTML = `
     <div class="sg-modal">
       <div class="sg-modal-header">
-        <h3>👤 ${escapeHtml(customer.name || 'Profile')}</h3>
+        <h3>${SGIcons.user} ${escapeHtml(customer.name || 'Profile')}</h3>
         <button class="close" id="pmClose">&times;</button>
       </div>
       <div class="sg-modal-body">
@@ -541,13 +626,41 @@ function openProfileMenu() {
   };
 }
 
-// ----- WhatsApp Float -----
 async function renderWAFloat() {
   const settings = await getCachedSettings();
   const wa = (settings.whatsapp_number || '8252487551').replace(/\D/g, '');
   const url = settings.whatsapp_chat_url || `https://wa.me/91${wa}`;
   const el = document.getElementById('sgWAFloat');
-  if (el) el.href = url;
+  if (el) {
+    el.href = url;
+    el.innerHTML = SGIcons.whatsapp;
+  }
+}
+
+// ----- Scroll Reveal -----
+function setupScrollReveal() {
+  const targets = document.querySelectorAll(
+    '.sg-section, .sg-contact-section, .sg-map-section, .sg-footer, .sg-card, .info-row'
+  );
+  targets.forEach((el, i) => {
+    if (el.classList.contains('sg-card')) el.classList.add('reveal-zoom');
+    else if (el.classList.contains('info-row')) el.classList.add('reveal-left');
+    else el.classList.add('reveal');
+  });
+
+  if (!('IntersectionObserver' in window)) {
+    targets.forEach(el => el.classList.add('visible'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  targets.forEach(el => io.observe(el));
 }
 
 // ----- INIT -----
@@ -555,8 +668,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderHeader();
   await renderHero();
   await renderProducts();
+  await renderContactSection();
+  await renderMap();
   await renderFooter();
   await renderWAFloat();
+  if (window.applyFestivalFromSettings) await applyFestivalFromSettings();
+  setupScrollReveal();
 });
 
 document.addEventListener('sg:cart-changed', renderHeader);

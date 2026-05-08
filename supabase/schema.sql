@@ -1,10 +1,12 @@
 -- ============================================================
--- SATYAM GOLD - SUPABASE COMPLETE SCHEMA
+-- SATYAM GOLD - SUPABASE COMPLETE SCHEMA (v2.1)
 -- Run this entire SQL in Supabase SQL Editor
 -- Project: https://ceicmmeeuphycsmvifak.supabase.co
+--
+-- Safe to run multiple times — uses IF NOT EXISTS / ON CONFLICT.
 -- ============================================================
 
--- 1. SITE SETTINGS (logo, colors, contact info, social links, footer text, etc.)
+-- 1. SITE SETTINGS (logo, colors, contact info, social links, festival, etc.)
 CREATE TABLE IF NOT EXISTS site_settings (
   id BIGSERIAL PRIMARY KEY,
   setting_key TEXT UNIQUE NOT NULL,
@@ -32,14 +34,14 @@ CREATE TABLE IF NOT EXISTS products (
   image_url TEXT,
   category TEXT DEFAULT 'Flour',
   in_stock BOOLEAN DEFAULT TRUE,
-  loved_by_base INT DEFAULT 0,                     -- Admin-set base count
-  loved_by_real INT DEFAULT 0,                     -- Real clicks added by users
+  loved_by_base INT DEFAULT 0,
+  loved_by_real INT DEFAULT 0,
   sort_order INT DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. CUSTOMERS / USERS
+-- 4. CUSTOMERS
 CREATE TABLE IF NOT EXISTS customers (
   id BIGSERIAL PRIMARY KEY,
   phone TEXT UNIQUE NOT NULL,
@@ -53,7 +55,7 @@ CREATE TABLE IF NOT EXISTS customers (
   last_login TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. PRODUCT LOVES (track who loved what so click toggles correctly)
+-- 5. PRODUCT LOVES
 CREATE TABLE IF NOT EXISTS product_loves (
   id BIGSERIAL PRIMARY KEY,
   product_id BIGINT REFERENCES products(id) ON DELETE CASCADE,
@@ -80,7 +82,6 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_method TEXT DEFAULT 'COD',
   payment_status TEXT DEFAULT 'Pending',
   status TEXT DEFAULT 'Pending',
-  -- Statuses: Pending, Accepted, Rejected, Packed, Shipped, Out for Delivery, Delivered, Cancelled
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -99,7 +100,7 @@ CREATE TABLE IF NOT EXISTS hero_slides (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 8. OTP STORE (temporary)
+-- 8. OTP STORE (kept for backwards-compat; Phone.email is now primary)
 CREATE TABLE IF NOT EXISTS otp_codes (
   id BIGSERIAL PRIMARY KEY,
   phone TEXT NOT NULL,
@@ -119,7 +120,7 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 10. POLICY PAGES (Privacy, Terms, Returns, Shipping, Refund, About)
+-- 10. POLICY PAGES
 CREATE TABLE IF NOT EXISTS policy_pages (
   id BIGSERIAL PRIMARY KEY,
   page_key TEXT UNIQUE NOT NULL,
@@ -129,7 +130,7 @@ CREATE TABLE IF NOT EXISTS policy_pages (
 );
 
 -- ============================================================
--- ROW LEVEL SECURITY (allow public read & insert for anon key)
+-- ROW LEVEL SECURITY
 -- ============================================================
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
@@ -142,31 +143,50 @@ ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE policy_pages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 
--- Public read access for everyone
-CREATE POLICY "public_read_settings" ON site_settings FOR SELECT USING (true);
-CREATE POLICY "public_read_products" ON products FOR SELECT USING (true);
-CREATE POLICY "public_read_hero" ON hero_slides FOR SELECT USING (true);
-CREATE POLICY "public_read_policies" ON policy_pages FOR SELECT USING (true);
+DO $$
+BEGIN
+  -- Drop existing policies (so re-running this script doesn't error)
+  PERFORM 1 FROM pg_policies WHERE policyname = 'public_read_settings' AND tablename = 'site_settings';
+  IF FOUND THEN DROP POLICY public_read_settings ON site_settings; END IF;
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
 
--- Public write access (anon key) - used by frontend (since this is admin via anon key)
-CREATE POLICY "public_all_settings" ON site_settings FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_products" ON products FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_hero" ON hero_slides FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_policies" ON policy_pages FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_customers" ON customers FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_orders" ON orders FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_loves" ON product_loves FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_otp" ON otp_codes FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_contact" ON contact_messages FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_admin" ON admin_users FOR ALL USING (true) WITH CHECK (true);
+-- Recreate policies (idempotent via DROP IF EXISTS)
+DROP POLICY IF EXISTS public_read_settings ON site_settings;
+DROP POLICY IF EXISTS public_read_products ON products;
+DROP POLICY IF EXISTS public_read_hero ON hero_slides;
+DROP POLICY IF EXISTS public_read_policies ON policy_pages;
+DROP POLICY IF EXISTS public_all_settings ON site_settings;
+DROP POLICY IF EXISTS public_all_products ON products;
+DROP POLICY IF EXISTS public_all_hero ON hero_slides;
+DROP POLICY IF EXISTS public_all_policies ON policy_pages;
+DROP POLICY IF EXISTS public_all_customers ON customers;
+DROP POLICY IF EXISTS public_all_orders ON orders;
+DROP POLICY IF EXISTS public_all_loves ON product_loves;
+DROP POLICY IF EXISTS public_all_otp ON otp_codes;
+DROP POLICY IF EXISTS public_all_contact ON contact_messages;
+DROP POLICY IF EXISTS public_all_admin ON admin_users;
+
+CREATE POLICY public_read_settings ON site_settings FOR SELECT USING (true);
+CREATE POLICY public_read_products ON products FOR SELECT USING (true);
+CREATE POLICY public_read_hero ON hero_slides FOR SELECT USING (true);
+CREATE POLICY public_read_policies ON policy_pages FOR SELECT USING (true);
+CREATE POLICY public_all_settings ON site_settings FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_products ON products FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_hero ON hero_slides FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_policies ON policy_pages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_customers ON customers FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_orders ON orders FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_loves ON product_loves FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_otp ON otp_codes FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_contact ON contact_messages FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY public_all_admin ON admin_users FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================
 -- DEFAULT DATA
 -- ============================================================
 
--- Default Admin (username: 8252487551, password: 8252487551)
-INSERT INTO admin_users (username, password) VALUES
-  ('8252487551', '8252487551')
+-- Default Admin
+INSERT INTO admin_users (username, password) VALUES ('8252487551', '8252487551')
 ON CONFLICT (username) DO NOTHING;
 
 -- Default Site Settings
@@ -174,11 +194,12 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
   ('site_name', 'Satyam Gold'),
   ('site_logo', 'https://base44.app/api/apps/68a375197577ce82d3f4980e/files/04925dbc9_100012467.png'),
   ('hero_tagline', 'Pure & Tasty Premium Quality Food Products'),
+  ('footer_tagline', 'Pure & tasty premium quality food products, delivered fresh.'),
   ('primary_color', '#F97316'),
   ('phone_number', '8252487551'),
   ('whatsapp_number', '8252487551'),
   ('email_address', 'satyamgold@gmail.com'),
-  ('business_address', 'Vidhyadhar, Khagaria, Bihar - 851204'),
+  ('business_address', 'Bidyadhar, Khagaria, Bihar - 851204'),
   ('legal_entity', 'Satyam Gold is a brand owned and operated by Satyam Food Product'),
   ('facebook_url', 'https://facebook.com'),
   ('instagram_url', 'https://instagram.com'),
@@ -187,8 +208,20 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
   ('footer_text', '© 2026 Satyam Gold. All rights reserved.'),
   ('cashfree_app_id', ''),
   ('cashfree_secret', ''),
-  ('cashfree_mode', 'TEST')
+  ('cashfree_mode', 'TEST'),
+  ('phone_email_client_id', '12468569854913964682'),
+  ('map_embed_url', 'https://www.google.com/maps?q=Bidyadhar,Khagaria,Bihar,India&output=embed'),
+  ('festival_mode', 'none'),
+  ('festival_message', '')
 ON CONFLICT (setting_key) DO NOTHING;
+
+-- Update key settings explicitly so re-runs apply the new defaults
+UPDATE site_settings SET setting_value='Bidyadhar, Khagaria, Bihar - 851204'
+  WHERE setting_key='business_address' AND (setting_value='' OR setting_value LIKE '%Vidhyadhar%');
+UPDATE site_settings SET setting_value='8252487551'
+  WHERE setting_key='phone_number' AND (setting_value='' OR setting_value='9631816666');
+UPDATE site_settings SET setting_value='8252487551'
+  WHERE setting_key='whatsapp_number' AND (setting_value='' OR setting_value='9631816666');
 
 -- Default Hero Slide
 INSERT INTO hero_slides (image_url, title, subtitle, button_text, button_link, active, sort_order) VALUES
@@ -222,7 +255,7 @@ ON CONFLICT DO NOTHING;
 INSERT INTO policy_pages (page_key, title, content) VALUES
 ('about',
  'About Us',
- '<h2>About Satyam Gold</h2><p><strong>Satyam Gold</strong> is a brand owned and operated by <strong>Satyam Food Product</strong>. We are committed to delivering pure, healthy and authentic Indian food products like Atta, Sattu, Besan and more, directly from nature to your kitchen.</p><p>Our products are made with traditional methods, free from preservatives and adulteration. We focus on family health and the original taste of every grain.</p><p><strong>Address:</strong> Vidhyadhar, Khagaria, Bihar - 851204<br><strong>Phone:</strong> 8252487551</p>'),
+ '<h2>About Satyam Gold</h2><p><strong>Satyam Gold</strong> is a brand owned and operated by <strong>Satyam Food Product</strong>. We are committed to delivering pure, healthy and authentic Indian food products like Atta, Sattu, Besan and more, directly from nature to your kitchen.</p><p>Our products are made with traditional methods, free from preservatives and adulteration. We focus on family health and the original taste of every grain.</p><p><strong>Address:</strong> Bidyadhar, Khagaria, Bihar - 851204<br><strong>Phone / WhatsApp:</strong> 8252487551</p>'),
 
 ('privacy',
  'Privacy Policy',
@@ -246,8 +279,13 @@ INSERT INTO policy_pages (page_key, title, content) VALUES
 
 ('contact',
  'Contact Us',
- '<h2>Contact Us</h2><p><strong>Legal Entity:</strong> Satyam Gold is a brand owned and operated by Satyam Food Product.</p><p><strong>Address:</strong> Vidhyadhar, Khagaria, Bihar - 851204<br><strong>Phone:</strong> 8252487551<br><strong>Email:</strong> satyamgold@gmail.com</p><p>You can also contact us via the website contact form or WhatsApp.</p>')
+ '<h2>Contact Us</h2><p><strong>Legal Entity:</strong> Satyam Gold is a brand owned and operated by Satyam Food Product.</p><p><strong>Address:</strong> Bidyadhar, Khagaria, Bihar - 851204<br><strong>Phone / WhatsApp:</strong> 8252487551<br><strong>Email:</strong> satyamgold@gmail.com</p><p>You can also contact us via the website contact form or WhatsApp.</p>')
 ON CONFLICT (page_key) DO NOTHING;
+
+-- Update About / Contact / Privacy / Refund / Return / Shipping content for re-runs (Vidhyadhar -> Bidyadhar)
+UPDATE policy_pages SET
+  content = REPLACE(REPLACE(content, 'Vidhyadhar', 'Bidyadhar'), 'vidhyadhar', 'Bidyadhar')
+WHERE content LIKE '%idhyadhar%';
 
 -- ============================================================
 -- DONE

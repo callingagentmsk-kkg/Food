@@ -1,0 +1,13 @@
+{
+  "name": "Satyam Gold",
+  "short_name": "Satyam Gold",
+  "description": "Pure & Tasty Premium Quality Food Products — Atta, Sattu, Besan",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "theme_color": "#F97316",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+}

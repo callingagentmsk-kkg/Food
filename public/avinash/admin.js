@@ -494,38 +494,70 @@ async function loadSettings() {
   const { data } = await sb.from('site_settings').select('*');
   const map = {};
   (data || []).forEach(r => map[r.setting_key] = r.setting_value);
-  setSiteName.value = map.site_name || '';
-  setLogo.value = map.site_logo || '';
-  setHeroTag.value = map.hero_tagline || '';
-  setFooter.value = map.footer_text || '';
-  setPhone.value = map.phone_number || '';
-  setWA.value = map.whatsapp_number || '';
-  setEmail.value = map.email_address || '';
-  setAddr.value = map.business_address || '';
-  setLegal.value = map.legal_entity || '';
-  setFB.value = map.facebook_url || '';
-  setIG.value = map.instagram_url || '';
-  setYT.value = map.youtube_url || '';
-  setWAChat.value = map.whatsapp_chat_url || '';
-  setCFApp.value = map.cashfree_app_id || '';
-  setCFSecret.value = map.cashfree_secret || '';
-  setCFMode.value = map.cashfree_mode || 'TEST';
-  document.getElementById('logoPreview').innerHTML = map.site_logo ? `<img src="${map.site_logo}" style="height:50px;border:1px solid #e5e7eb;padding:4px;border-radius:6px">` : '';
+  const v = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+
+  v('setSiteName', map.site_name);
+  v('setLogo', map.site_logo);
+  v('setHeroTag', map.hero_tagline);
+  v('setFooterTag', map.footer_tagline);
+  v('setFooter', map.footer_text);
+  v('setPhone', map.phone_number);
+  v('setWA', map.whatsapp_number);
+  v('setEmail', map.email_address);
+  v('setAddr', map.business_address);
+  v('setLegal', map.legal_entity);
+  v('setMap', map.map_embed_url);
+  v('setFB', map.facebook_url);
+  v('setIG', map.instagram_url);
+  v('setYT', map.youtube_url);
+  v('setWAChat', map.whatsapp_chat_url);
+  v('setCFApp', map.cashfree_app_id);
+  v('setCFSecret', map.cashfree_secret);
+  v('setCFMode', map.cashfree_mode || 'TEST');
+  v('setPEClient', map.phone_email_client_id);
+  v('setFestival', map.festival_mode || 'none');
+  v('setFestivalMsg', map.festival_message);
+
+  document.getElementById('logoPreview').innerHTML = map.site_logo
+    ? `<img src="${map.site_logo}" style="height:50px;border:1px solid #e5e7eb;padding:4px;border-radius:6px">`
+    : '';
 }
 
 window.saveSettings = async function () {
+  const g = id => (document.getElementById(id)?.value ?? '');
   const updates = {
-    site_name: setSiteName.value, site_logo: setLogo.value, hero_tagline: setHeroTag.value,
-    footer_text: setFooter.value, phone_number: setPhone.value, whatsapp_number: setWA.value,
-    email_address: setEmail.value, business_address: setAddr.value, legal_entity: setLegal.value,
-    facebook_url: setFB.value, instagram_url: setIG.value, youtube_url: setYT.value,
-    whatsapp_chat_url: setWAChat.value, cashfree_app_id: setCFApp.value,
-    cashfree_secret: setCFSecret.value, cashfree_mode: setCFMode.value
+    site_name: g('setSiteName'),
+    site_logo: g('setLogo'),
+    hero_tagline: g('setHeroTag'),
+    footer_tagline: g('setFooterTag'),
+    footer_text: g('setFooter'),
+    phone_number: g('setPhone'),
+    whatsapp_number: g('setWA'),
+    email_address: g('setEmail'),
+    business_address: g('setAddr'),
+    legal_entity: g('setLegal'),
+    map_embed_url: g('setMap'),
+    facebook_url: g('setFB'),
+    instagram_url: g('setIG'),
+    youtube_url: g('setYT'),
+    whatsapp_chat_url: g('setWAChat'),
+    cashfree_app_id: g('setCFApp'),
+    cashfree_secret: g('setCFSecret'),
+    cashfree_mode: g('setCFMode') || 'TEST',
+    phone_email_client_id: g('setPEClient'),
+    festival_mode: g('setFestival') || 'none',
+    festival_message: g('setFestivalMsg')
   };
-  for (const [k, v] of Object.entries(updates)) {
-    await sb.from('site_settings').upsert({ setting_key: k, setting_value: v, updated_at: new Date().toISOString() }, { onConflict: 'setting_key' });
-  }
-  toast('Settings saved', 'success');
+
+  const rows = Object.entries(updates).map(([setting_key, setting_value]) => ({
+    setting_key,
+    setting_value,
+    updated_at: new Date().toISOString()
+  }));
+
+  const { error } = await sb.from('site_settings').upsert(rows, { onConflict: 'setting_key' });
+  if (error) { toast('Save failed: ' + error.message, 'error'); return; }
+  toast('✅ Settings saved successfully', 'success');
   loadSettings();
 };
 

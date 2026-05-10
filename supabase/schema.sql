@@ -212,7 +212,9 @@ INSERT INTO site_settings (setting_key, setting_value) VALUES
   ('phone_email_client_id', '12468569854913964682'),
   ('map_embed_url', 'https://www.google.com/maps?q=Bidyadhar,Khagaria,Bihar,India&output=embed'),
   ('festival_mode', 'none'),
-  ('festival_message', '')
+  ('festival_message', ''),
+  ('show_made_with', 'true'),
+  ('made_with_text', 'Brand owned & operated by <strong>Satyam Food Product</strong> · Made with ❤️ in Bihar')
 ON CONFLICT (setting_key) DO NOTHING;
 
 -- Update key settings explicitly so re-runs apply the new defaults

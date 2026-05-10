@@ -1,6 +1,10 @@
 // ============================================================
-// SATYAM GOLD - Festival Mode Animations
-// Diwali, Holi, Christmas, Eid, Independence Day, Republic Day, New Year
+// SATYAM GOLD - Festival & Season Mode Animations
+// 20+ themes: Diwali, Holi, Christmas, Eid, I-Day, R-Day, New Year,
+// Rakhi, Janmashtami, Navratri, Durga Puja, Ganesh Chaturthi,
+// Karwa Chauth, Lohri/Makar Sankranti, Onam, Pongal, Chhath,
+// Valentine, Mother's/Father's Day, Friendship, Children's,
+// Summer, Winter, Monsoon, Spring, Autumn
 // ============================================================
 
 window.SGFestival = {
@@ -68,6 +72,166 @@ window.SGFestival = {
       bannerColor: '#fff',
       emojis: ['🎀', '🪢', '💖', '🎁'],
       cssClass: 'fest-rakhi'
+    },
+    janmashtami: {
+      name: 'Janmashtami',
+      banner: '🦚 Happy Janmashtami — Krishna Special Offers! 🪈',
+      bannerBg: 'linear-gradient(90deg,#1e3a8a,#7c3aed,#facc15)',
+      bannerColor: '#fff',
+      emojis: ['🦚', '🪈', '🥛', '🌼', '✨'],
+      cssClass: 'fest-janmashtami'
+    },
+    navratri: {
+      name: 'Navratri',
+      banner: '💃 Happy Navratri — 9 Days of Mega Offers! 🪘',
+      bannerBg: 'linear-gradient(90deg,#dc2626,#f97316,#facc15,#ec4899)',
+      bannerColor: '#fff',
+      emojis: ['💃', '🪘', '🌺', '🌼', '✨'],
+      cssClass: 'fest-navratri'
+    },
+    durgapuja: {
+      name: 'Durga Puja',
+      banner: '🙏 Shubho Mahalaya — Durga Puja Special Sale! 🌺',
+      bannerBg: 'linear-gradient(90deg,#b91c1c,#f97316,#facc15)',
+      bannerColor: '#fff',
+      emojis: ['🌺', '🪔', '🙏', '🌸', '✨'],
+      cssClass: 'fest-durga'
+    },
+    ganesh: {
+      name: 'Ganesh Chaturthi',
+      banner: '🙏 Ganpati Bappa Morya — Festival Discounts! 🌺',
+      bannerBg: 'linear-gradient(90deg,#f97316,#dc2626,#facc15)',
+      bannerColor: '#fff',
+      emojis: ['🐘', '🙏', '🌺', '🪔', '✨'],
+      cssClass: 'fest-ganesh'
+    },
+    karwa: {
+      name: 'Karwa Chauth',
+      banner: '🌙 Happy Karwa Chauth — Special Offers! 💝',
+      bannerBg: 'linear-gradient(90deg,#be123c,#dc2626,#f59e0b)',
+      bannerColor: '#fff',
+      emojis: ['🌙', '💝', '💍', '🌹', '✨'],
+      cssClass: 'fest-karwa'
+    },
+    lohri: {
+      name: 'Lohri / Makar Sankranti',
+      banner: '🪁 Happy Lohri & Makar Sankranti — Festival Offers! 🔥',
+      bannerBg: 'linear-gradient(90deg,#f59e0b,#dc2626,#facc15)',
+      bannerColor: '#fff',
+      emojis: ['🪁', '🔥', '🌽', '🥜', '✨'],
+      cssClass: 'fest-lohri'
+    },
+    pongal: {
+      name: 'Pongal',
+      banner: '🌾 Happy Pongal — Harvest Festival Discounts! 🐄',
+      bannerBg: 'linear-gradient(90deg,#16a34a,#facc15,#f97316)',
+      bannerColor: '#fff',
+      emojis: ['🌾', '🐄', '🌻', '🥥', '✨'],
+      cssClass: 'fest-pongal'
+    },
+    onam: {
+      name: 'Onam',
+      banner: '🌼 Happy Onam — Pookalam Special Sale! 🚣',
+      bannerBg: 'linear-gradient(90deg,#16a34a,#facc15,#f97316)',
+      bannerColor: '#fff',
+      emojis: ['🌼', '🌺', '🌻', '🍌', '🥥'],
+      cssClass: 'fest-onam'
+    },
+    chhath: {
+      name: 'Chhath Puja',
+      banner: '🌅 Jai Chhathi Maiya — Special Bihar Sale! 🪔',
+      bannerBg: 'linear-gradient(90deg,#f59e0b,#dc2626,#7c2d12)',
+      bannerColor: '#fff',
+      emojis: ['🌅', '🪔', '🌾', '🥥', '🙏'],
+      cssClass: 'fest-chhath'
+    },
+    valentine: {
+      name: "Valentine's Day",
+      banner: "💖 Happy Valentine's Day — Love Special Offers! 💝",
+      bannerBg: 'linear-gradient(90deg,#be123c,#ec4899,#f472b6)',
+      bannerColor: '#fff',
+      emojis: ['💖', '💝', '🌹', '💐', '💕'],
+      cssClass: 'fest-valentine'
+    },
+    mothersday: {
+      name: "Mother's Day",
+      banner: "👩‍👧 Happy Mother's Day — Special Gift Offers! 💐",
+      bannerBg: 'linear-gradient(90deg,#ec4899,#f472b6,#fbcfe8)',
+      bannerColor: '#7c2d12',
+      emojis: ['💐', '🌷', '💖', '🌹', '👩‍👧'],
+      cssClass: 'fest-mothers'
+    },
+    fathersday: {
+      name: "Father's Day",
+      banner: "👨‍👦 Happy Father's Day — Special Gift Offers! 🎁",
+      bannerBg: 'linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa)',
+      bannerColor: '#fff',
+      emojis: ['👨‍👦', '🎁', '👔', '🍻', '⭐'],
+      cssClass: 'fest-fathers'
+    },
+    friendship: {
+      name: 'Friendship Day',
+      banner: '🤝 Happy Friendship Day — Buddy Special Sale! 💛',
+      bannerBg: 'linear-gradient(90deg,#facc15,#f97316,#ec4899)',
+      bannerColor: '#fff',
+      emojis: ['🤝', '💛', '👫', '🎀', '✨'],
+      cssClass: 'fest-friendship'
+    },
+    childrens: {
+      name: "Children's Day",
+      banner: "🎈 Happy Children's Day — Kids Special Offers! 🧸",
+      bannerBg: 'linear-gradient(90deg,#3b82f6,#a855f7,#ec4899)',
+      bannerColor: '#fff',
+      emojis: ['🎈', '🧸', '🎂', '🎁', '🎉'],
+      cssClass: 'fest-childrens'
+    },
+    teachers: {
+      name: "Teacher's Day",
+      banner: "🎓 Happy Teacher's Day — Knowledge Special! 📚",
+      bannerBg: 'linear-gradient(90deg,#1e3a8a,#7c3aed,#0891b2)',
+      bannerColor: '#fff',
+      emojis: ['🎓', '📚', '🍎', '✏️', '⭐'],
+      cssClass: 'fest-teachers'
+    },
+    summer: {
+      name: 'Summer Sale',
+      banner: '☀️ Summer Mega Sale — Beat the Heat with Hot Deals! 🌞',
+      bannerBg: 'linear-gradient(90deg,#f59e0b,#facc15,#fb923c)',
+      bannerColor: '#7c2d12',
+      emojis: ['☀️', '🌞', '🍉', '🥭', '🌴'],
+      cssClass: 'fest-summer'
+    },
+    winter: {
+      name: 'Winter Sale',
+      banner: '❄️ Winter Mega Sale — Warm Up with Cool Offers! ⛄',
+      bannerBg: 'linear-gradient(90deg,#0891b2,#3b82f6,#a5f3fc)',
+      bannerColor: '#fff',
+      emojis: ['❄️', '⛄', '🧣', '☕', '🌨️'],
+      cssClass: 'fest-winter'
+    },
+    monsoon: {
+      name: 'Monsoon Sale',
+      banner: '🌧️ Monsoon Mega Sale — Rainy-Day Special Offers! ☔',
+      bannerBg: 'linear-gradient(90deg,#0f766e,#0891b2,#1e40af)',
+      bannerColor: '#fff',
+      emojis: ['🌧️', '☔', '🌈', '🍃', '💧'],
+      cssClass: 'fest-monsoon'
+    },
+    spring: {
+      name: 'Spring Sale',
+      banner: '🌸 Spring Sale — Bloom with Fresh Offers! 🌷',
+      bannerBg: 'linear-gradient(90deg,#ec4899,#f472b6,#86efac)',
+      bannerColor: '#fff',
+      emojis: ['🌸', '🌷', '🌼', '🦋', '🌿'],
+      cssClass: 'fest-spring'
+    },
+    autumn: {
+      name: 'Autumn Sale',
+      banner: '🍂 Autumn Sale — Fall in Love with Discounts! 🍁',
+      bannerBg: 'linear-gradient(90deg,#b45309,#dc2626,#f97316)',
+      bannerColor: '#fff',
+      emojis: ['🍂', '🍁', '🌰', '🎃', '🍄'],
+      cssClass: 'fest-autumn'
     },
     none: null
   },

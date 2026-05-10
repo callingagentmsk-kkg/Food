@@ -719,6 +719,30 @@ body.fest-holi .sg-btn-primary { background: linear-gradient(90deg,#ec4899,#a855
 body.fest-christmas .sg-btn-primary { background: linear-gradient(90deg,#dc2626,#16a34a); }
 body.fest-tiranga .sg-btn-primary { background: linear-gradient(90deg,#f97316,#ffffff,#16a34a); color:#0f172a; border:1px solid #16a34a; }
 body.fest-newyear .sg-card .badge-discount { background: linear-gradient(90deg,#7c3aed,#db2777); }
+body.fest-eid .sg-btn-primary { background: linear-gradient(90deg,#064e3b,#10b981); }
+body.fest-rakhi .sg-btn-primary { background: linear-gradient(90deg,#dc2626,#f97316,#facc15); }
+body.fest-janmashtami .sg-btn-primary { background: linear-gradient(90deg,#1e3a8a,#7c3aed,#facc15); }
+body.fest-navratri .sg-btn-primary { background: linear-gradient(90deg,#dc2626,#f97316,#ec4899); }
+body.fest-durga .sg-btn-primary { background: linear-gradient(90deg,#b91c1c,#f97316); }
+body.fest-ganesh .sg-btn-primary { background: linear-gradient(90deg,#f97316,#dc2626); }
+body.fest-karwa .sg-btn-primary { background: linear-gradient(90deg,#be123c,#dc2626); }
+body.fest-lohri .sg-btn-primary { background: linear-gradient(90deg,#f59e0b,#dc2626); }
+body.fest-pongal .sg-btn-primary { background: linear-gradient(90deg,#16a34a,#facc15); }
+body.fest-onam .sg-btn-primary { background: linear-gradient(90deg,#16a34a,#facc15,#f97316); }
+body.fest-chhath .sg-btn-primary { background: linear-gradient(90deg,#f59e0b,#dc2626); }
+body.fest-valentine .sg-btn-primary { background: linear-gradient(90deg,#be123c,#ec4899); }
+body.fest-mothers .sg-btn-primary { background: linear-gradient(90deg,#ec4899,#f472b6); }
+body.fest-fathers .sg-btn-primary { background: linear-gradient(90deg,#1e3a8a,#2563eb); }
+body.fest-friendship .sg-btn-primary { background: linear-gradient(90deg,#facc15,#f97316,#ec4899); }
+body.fest-childrens .sg-btn-primary { background: linear-gradient(90deg,#3b82f6,#a855f7,#ec4899); }
+body.fest-teachers .sg-btn-primary { background: linear-gradient(90deg,#1e3a8a,#0891b2); }
+body.fest-summer .sg-btn-primary { background: linear-gradient(90deg,#f59e0b,#fb923c); color:#7c2d12; }
+body.fest-summer .sg-card { box-shadow: 0 0 14px rgba(251,191,36,.18), var(--shadow-sm); }
+body.fest-winter .sg-btn-primary { background: linear-gradient(90deg,#0891b2,#3b82f6); }
+body.fest-winter .sg-card { box-shadow: 0 0 14px rgba(165,243,252,.3), var(--shadow-sm); }
+body.fest-monsoon .sg-btn-primary { background: linear-gradient(90deg,#0f766e,#1e40af); }
+body.fest-spring .sg-btn-primary { background: linear-gradient(90deg,#ec4899,#86efac); }
+body.fest-autumn .sg-btn-primary { background: linear-gradient(90deg,#b45309,#dc2626); }
 
 /* Body shift down when banner present */
 body.fest-diwali, body.fest-holi, body.fest-christmas,

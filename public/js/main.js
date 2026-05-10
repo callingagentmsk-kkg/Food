@@ -189,7 +189,7 @@ async function renderFooter() {
     </div>
     <div class="sg-footer-bottom">
       <div>${settings.footer_text || '© 2026 Satyam Gold. All rights reserved.'}</div>
-      <div class="made-with">Brand owned & operated by <strong>Satyam Food Product</strong> · Made with ❤️ in Bihar</div>
+      ${settings.show_made_with !== 'false' ? `<div class="made-with">${settings.made_with_text || 'Brand owned & operated by <strong>Satyam Food Product</strong> · Made with ❤️ in Bihar'}</div>` : ''}
     </div>
   `;
 }

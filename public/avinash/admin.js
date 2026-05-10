@@ -517,6 +517,8 @@ async function loadSettings() {
   v('setPEClient', map.phone_email_client_id);
   v('setFestival', map.festival_mode || 'none');
   v('setFestivalMsg', map.festival_message);
+  v('setShowMadeWith', map.show_made_with || 'true');
+  v('setMadeWith', map.made_with_text);
 
   document.getElementById('logoPreview').innerHTML = map.site_logo
     ? `<img src="${map.site_logo}" style="height:50px;border:1px solid #e5e7eb;padding:4px;border-radius:6px">`
@@ -546,7 +548,9 @@ window.saveSettings = async function () {
     cashfree_mode: g('setCFMode') || 'TEST',
     phone_email_client_id: g('setPEClient'),
     festival_mode: g('setFestival') || 'none',
-    festival_message: g('setFestivalMsg')
+    festival_message: g('setFestivalMsg'),
+    show_made_with: g('setShowMadeWith') || 'true',
+    made_with_text: g('setMadeWith')
   };
 
   const rows = Object.entries(updates).map(([setting_key, setting_value]) => ({
